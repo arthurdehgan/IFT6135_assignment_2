@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import math, copy, time
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
+from collection import OrderedDict
 
 # NOTE ==============================================
 #
@@ -47,9 +48,6 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
                   non-recurrent connections.
                   Do not apply dropout on recurrent connections.
     """
-    super(RNN, self).__init__()
-
-    # TODO ========================
     # Initialization of the parameters of the recurrent and fc layers. 
     # Your implementation should support any number of stacked hidden layers 
     # (specified by num_layers), use an input embedding layer, and include fully
@@ -63,22 +61,44 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
     # for Pytorch to recognize these parameters as belonging to this nn.Module 
     # and compute their gradients automatically. You're not obligated to use the
     # provided clones function.
+    super(RNN, self).__init__()
 
-  def init_weights_uniform(self):
-    # TODO ========================
+    model = OrderedDict()
+    input_size = emb_size
+    assert len(hidden_size) == num_layers
+    for i in range(num_layers):
+        output_size = hidden_size[i]
+        model[f'W{i}'], model[f'b{i}'] = self.init_weights_uniform(input_size, output_size)
+        input_size = output_size
+
+    self.hidden_size = hidden_size
+    self.seq_len = seq_len
+    self.batch_size = batch_size
+    self.vocab_size = vocab_size
+    self.num_layers = num_layers
+    self.dp_keep_prob = dp_keep_prob
+
+  def init_weights_uniform(self, in_shape, out_shape):
     # Initialize all the weights uniformly in the range [-0.1, 0.1]
     # and all the biases to 0 (in place)
+      W = torch.empty(in_shape, out_shape).uniform_(-0.1, 0.1)
+      b = torch.zeros(in_shape, 1)
+      return W, b
 
   def init_hidden(self):
-    # TODO ========================
-    # initialize the hidden states to zero
     """
     This is used for the first mini-batch in an epoch, only.
     """
-    return # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+    # TODO ========================
+    # initialize the hidden states to zero
+    # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+    return  torch.zeros(self.num_layers, self.batch_size, self.hidden_size)
 
   def forward(self, inputs, hidden):
-    # TODO ========================
+      for ts in timesteps:
+          out = inputs[ts]
+          for W, b in model.values():
+              out = torch.mm(W, out) + b
     # Compute the forward pass, using a nested python for loops.
     # The outer for loop should iterate over timesteps, and the 
     # inner for loop should iterate over hidden layers of the stack. 
