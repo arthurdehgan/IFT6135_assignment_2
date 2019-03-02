@@ -64,13 +64,13 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
         super(RNN, self).__init__()
 
         model = OrderedDict()
+        model['emb'] = self.init_weights_uniform(vocab_size, emb_size)
         input_size = emb_size
-        assert len(hidden_size) == num_layers
         for i in range(num_layers):
-            output_size = hidden_size[i]
-            model[f'W{i}'], model[f'b{i}'] = self.init_weights_uniform(input_size, output_size)
-            input_size = output_size
+            model[f'W{i}'], model[f'b{i}'] = self.init_weights_uniform(input_size, hidden_size)
+            input_size = hidden_size
 
+        self.emb_size = emb_size
         self.hidden_size = hidden_size
         self.seq_len = seq_len
         self.batch_size = batch_size
