@@ -54,7 +54,7 @@ class RNN(nn.Module):
         self.embedding = WordEmbedding(emb_size, vocab_size)
         input_size = emb_size
         for i in range(num_layers):
-            model[f"R{i}"] = tuple(
+            model[f"R{i}"] = (
                 Recurrent(*self.init_weights_uniform(input_size, hidden_size)),
                 nn.Linear(hidden_size, hidden_size),
                 nn.Dropout(1 - dp_keep_prob),
@@ -110,10 +110,11 @@ class RNN(nn.Module):
         logits = torch.zeros(self.seq_len, self.batch_size, self.vocab_size)
         for ts in range(timesteps):
             ts_input = self.embedding(inputs[ts])
-            for key, layer in self.model.items()[-1]:
+            for key, layer in self.model.items():
                 i = int(key[-1])
-                input_ts = layer[2](layer[1](layer[0].forward(ts_input, hidden[i])))
-                hidden[i] = input_ts
+                if key.startswith("R"):
+                    input_ts = layer[2](layer[1](layer[0].forward(ts_input, hidden[i])))
+                    hidden[i] = input_ts
             logits[ts] = self.model["Last_FC"].forward(hidden[-1])
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
