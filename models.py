@@ -15,18 +15,14 @@ def clones(module, N):
 
 
 class Recurrent(nn.Module):
-    def __init__(self, Wx, Wy, Wh, bx, by):
+    def __init__(self, Wx, Wh, bx):
         super(Recurrent).__init__()
         self.Wx = Wx
-        self.Wy = Wy
         self.Wh = Wh
         self.bx = bx
-        self.by = by
 
     def forward(self, inputs, hidden):
-        hidden = torch.mm(self.Wx, inputs) + torch.mm(self.Wh, hidden) + self.bx
-        out = torch.mm(self.Wy, inputs) + self.by
-        return out, hidden
+        return (torch.mm(self.Wx, inputs) + torch.mm(self.Wh, hidden.T) + self.bx).T
 
 
 # Problem 1
@@ -54,17 +50,19 @@ class RNN(nn.Module):
         """
         super(RNN, self).__init__()
 
-        self.model = OrderedDict()
+        model = OrderedDict()
         self.embedding = WordEmbedding(emb_size, vocab_size)
         input_size = emb_size
         for i in range(num_layers):
-            self.model[f"R{i}"] = Recurrent(
-                self.init_weights_uniform(input_size, hidden_size)
+            model[f"R{i}"] = tuple(
+                Recurrent(*self.init_weights_uniform(input_size, hidden_size)),
+                nn.Linear(hidden_size, hidden_size),
+                nn.Dropout(1 - dp_keep_prob),
             )
-            self.model[f"fc{i}"] = nn.Linear(hidden_size, hidden_size)
-            self.model[f"dp{i}"] = nn.Dropout(1 - dp_keep_prob)
             input_size = hidden_size
+        model["Last_FC"] = nn.Linear(hidden_size, vocab_size)
 
+        self.model = model
         self.emb_size = emb_size
         self.hidden_size = hidden_size
         self.seq_len = seq_len
@@ -74,12 +72,10 @@ class RNN(nn.Module):
         self.dp_keep_prob = dp_keep_prob
 
     def init_weights_uniform(self, in_shape, out_shape):
-        Wh = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad()
-        Wx = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad()
-        Wy = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad()
-        bx = torch.zeros(in_shape, 1).requires_grad()
-        by = torch.zeros(in_shape, 1).requires_grad()
-        return Wx, Wy, Wh, bx, by
+        Wh = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
+        Wx = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
+        bx = torch.zeros(out_shape, 1).requires_grad_()
+        return Wx, Wh, bx
 
     def init_hidden(self):
         """
@@ -113,14 +109,12 @@ class RNN(nn.Module):
         timesteps = len(inputs)
         logits = torch.zeros(self.seq_len, self.batch_size, self.vocab_size)
         for ts in range(timesteps):
-            out = self.embedding(inputs[ts])
-            for key, layer in self.model:
-                if key.startswith("R"):
-                    i = int(key[-1])
-                    out, hidden[i] = layer.forward(out, hidden[i])
-                else:
-                    out = layer.forward(out)
-            logits[ts] = out
+            ts_input = self.embedding(inputs[ts])
+            for key, layer in self.model.items()[-1]:
+                i = int(key[-1])
+                input_ts = layer[2](layer[1](layer[0].forward(ts_input, hidden[i])))
+                hidden[i] = input_ts
+            logits[ts] = self.model["Last_FC"].forward(hidden[-1])
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
