@@ -56,7 +56,7 @@ class RNN(nn.Module):
         input_size = emb_size
         for i in range(num_layers):
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Wh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
             model["tanh"] = nn.Tanh().cuda()
             # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
             # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
