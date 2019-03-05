@@ -124,7 +124,7 @@ parser.add_argument(
 parser.add_argument(
     "--seq_len",
     type=int,
-    default=35,
+    default=25,
     help="number of timesteps over which BPTT is performed",
 )
 parser.add_argument("--batch_size", type=int, default=20, help="size of one minibatch")
@@ -154,7 +154,7 @@ parser.add_argument(
     "--dp_keep_prob",
     type=float,
     default=0.35,
-    help="dropout *keep* probability (dp_keep_prob=0 means no dropout",
+    help="dropout *keep* probability (dp_keep_prob=1 means no dropout",
 )
 
 # Arguments that you may want to make use of / implement more code for
@@ -393,12 +393,12 @@ m_flat_lr = 14.0  # we will not touch lr for the first m_flat_lr epochs
 def repackage_hidden(h):
     """
     Wraps hidden states in new Tensors, to detach them from their history.
-    
-    This prevents Pytorch from trying to backpropagate into previous input 
-    sequences when we use the final hidden states from one mini-batch as the 
+
+    This prevents Pytorch from trying to backpropagate into previous input
+    sequences when we use the final hidden states from one mini-batch as the
     initial hidden states for the next mini-batch.
-    
-    Using the final hidden states in this way makes sense when the elements of 
+
+    Using the final hidden states in this way makes sense when the elements of
     the mini-batches are actually successive subsequences in a set of longer sequences.
     This is the case with the way we've processed the Penn Treebank dataset.
     """
@@ -424,61 +424,62 @@ def run_epoch(model, data, is_train=False, lr=1.0):
     costs = 0.0
     iters = 0
     losses = []
+    with torch.autograd.set_detect_anomaly(True):
+        # LOOP THROUGH MINIBATCHES
+        for step, (x, y) in enumerate(ptb_iterator(data, model.batch_size, model.seq_len)):
+            if args.model == "TRANSFfORMER":
+                batch = Batch(torch.from_numpy(x).long().to(device))
+                model.zero_grad()
+                outputs = model.forward(batch.data, batch.mask).transpose(1, 0)
 
-    # LOOP THROUGH MINIBATCHES
-    for step, (x, y) in enumerate(ptb_iterator(data, model.batch_size, model.seq_len)):
-        if args.model == "TRANSFORMER":
-            batch = Batch(torch.from_numpy(x).long().to(device))
-            model.zero_grad()
-            outputs = model.forward(batch.data, batch.mask).transpose(1, 0)
-            # print ("outputs.shape", outputs.shape)
-        else:
-            inputs = (
-                torch.from_numpy(x.astype(np.int64))
-                .transpose(0, 1)
-                .contiguous()
-                .to(device)
-            )  # .cuda()
-            model.zero_grad()
-            hidden = repackage_hidden(hidden)
-            outputs, hidden = model(inputs, hidden)
-
-        targets = (
-            torch.from_numpy(y.astype(np.int64)).transpose(0, 1).contiguous().to(device)
-        )  # .cuda()
-        tt = torch.squeeze(targets.view(-1, model.batch_size * model.seq_len))
-
-        # LOSS COMPUTATION
-        # This line currently averages across all the sequences in a mini-batch
-        # and all time-steps of the sequences.
-        # For problem 5.3, you will (instead) need to compute the average loss
-        # at each time-step separately.
-        loss = loss_fn(outputs.contiguous().view(-1, model.vocab_size), tt)
-        costs += loss.data.item() * model.seq_len
-        losses.append(costs)
-        iters += model.seq_len
-        if args.debug:
-            print(step, loss)
-        if is_train:  # Only update parameters if training
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
-            if args.optimizer == "ADAM":
-                optimizer.step()
+                # print ("outputs.shape", outputs.shape)
             else:
-                for p in model.parameters():
-                    if p.grad is not None:
-                        p.data.add_(-lr, p.grad.data)
-            if step % (epoch_size // 10) == 10:
-                print(
-                    "step: "
-                    + str(step)
-                    + "\t"
-                    + "loss: "
-                    + str(costs)
-                    + "\t"
-                    + "speed (wps):"
-                    + str(iters * model.batch_size / (time.time() - start_time))
-                )
+                inputs = (
+                    torch.from_numpy(x.astype(np.int64))
+                    .transpose(0, 1)
+                    .contiguous()
+                    .to(device)
+                )  # .cuda()
+                model.zero_grad()
+                hidden = repackage_hidden(hidden)
+                outputs, hidden = model(inputs, hidden)
+
+            targets = (
+                torch.from_numpy(y.astype(np.int64)).transpose(0, 1).contiguous().to(device)
+            )  # .cuda()
+            tt = torch.squeeze(targets.view(-1, model.batch_size * model.seq_len))
+
+            # LOSS COMPUTATION
+            # This line currently averages across all the sequences in a mini-batch
+            # and all time-steps of the sequences.
+            # For problem 5.3, you will (instead) need to compute the average loss
+            # at each time-step separately.
+            loss = loss_fn(outputs.contiguous().view(-1, model.vocab_size), tt)
+            costs += loss.data.item() * model.seq_len
+            losses.append(costs)
+            iters += model.seq_len
+            if args.debug:
+                print(step, loss)
+            if is_train:  # Only update parameters if training
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+                if args.optimizer == "ADAM":
+                    optimizer.step()
+                else:
+                    for p in model.parameters():
+                        if p.grad is not None:
+                            p.data.add_(-lr, p.grad.data)
+                if step % (epoch_size // 10) == 10:
+                    print(
+                        "step: "
+                        + str(step)
+                        + "\t"
+                        + "loss: "
+                        + str(costs)
+                        + "\t"
+                        + "speed (wps):"
+                        + str(iters * model.batch_size / (time.time() - start_time))
+                    )
     return np.exp(costs / iters), losses
 
 

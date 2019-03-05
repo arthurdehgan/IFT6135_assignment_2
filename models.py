@@ -7,6 +7,7 @@ import math, copy, time
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+from torch.nn.parameter import Parameter
 
 
 def clones(module, N):
@@ -14,15 +15,23 @@ def clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
-class Recurrent(nn.Module):
-    def __init__(self, Wx, Wh, bx):
-        super(Recurrent).__init__()
-        self.Wx = Wx
-        self.Wh = Wh
-        self.bx = bx
-
-    def forward(self, inputs, hidden):
-        return (torch.mm(self.Wx, inputs) + torch.mm(self.Wh, hidden.T) + self.bx).T
+# class Recurrent(nn.Module):
+#     def __init__(self, in_features, out_features):
+#         super(Recurrent, self).__init__()
+#         self.in_features = in_features
+#         self.out_features = out_features
+#         self.Wx = Parameter(torch.Tensor(out_features, in_features))
+#         self.Wh = Parameter(torch.Tensor(out_features, in_features))
+#         self.bx = Parameter(torch.Tensor(out_features,1))
+#         self.reset_parameters()
+#
+#     def forward(self, inputs, hidden):
+#         return (torch.mm(self.Wx, inputs.transpose(0,1)) + torch.mm(self.Wh, hidden.transpose(0,1)) + self.bx).transpose(0,1)
+#
+#     def reset_parameters(self):
+#         self.Wx.data.uniform_(-.1,.1)
+#         self.Wh.data.uniform_(-.1,.1)
+#         self.bx.data = torch.zeros(self.out_features, 1)
 
 
 # Problem 1
@@ -42,9 +51,9 @@ class RNN(nn.Module):
         hidden_size:  The number of hidden units per layer
         seq_len:      The length of the input sequences
         vocab_size:   The number of tokens in the vocabulary (10,000 for Penn TreeBank)
-        num_layers:   The depth of the stack (i.e. the number of hidden layers at 
+        num_layers:   The depth of the stack (i.e. the number of hidden layers at
                       each time-step)
-        dp_keep_prob: The probability of *not* dropping out units in the 
+        dp_keep_prob: The probability of *not* dropping out units in the
                       non-recurrent connections.
                       Do not apply dropout on recurrent connections.
         """
@@ -55,9 +64,11 @@ class RNN(nn.Module):
         input_size = emb_size
         for i in range(num_layers):
             model[f"R{i}"] = (
-                Recurrent(*self.init_weights_uniform(input_size, hidden_size)),
-                nn.Linear(hidden_size, hidden_size),
-                nn.Dropout(1 - dp_keep_prob),
+                # Recurrent(input_size, hidden_size),
+                nn.Linear(input_size, hidden_size),
+                nn.Linear(input_size, hidden_size, bias=False),
+                # nn.Linear(hidden_size, hidden_size),
+                # nn.Dropout(1 - dp_keep_prob),
             )
             input_size = hidden_size
         model["Last_FC"] = nn.Linear(hidden_size, vocab_size)
@@ -71,11 +82,13 @@ class RNN(nn.Module):
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-    def init_weights_uniform(self, in_shape, out_shape):
-        Wh = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
-        Wx = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
-        bx = torch.zeros(out_shape, 1).requires_grad_()
-        return Wx, Wh, bx
+    def init_weights_uniform(self):
+        # Wh = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
+        # Wx = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
+        # bx = torch.zeros(out_shape, 1).requires_grad_()
+        # return Wx, Wh, bx
+        for param in self.parameters():
+            param.data.uniform_(-0.1, 0.1)
 
     def init_hidden(self):
         """
@@ -86,7 +99,7 @@ class RNN(nn.Module):
     def forward(self, inputs, hidden):
         """
         Arguments:
-            - inputs: A mini-batch of input sequences, composed of integers that 
+            - inputs: A mini-batch of input sequences, composed of integers that
                         represent the index of the current token(s) in the vocabulary.
                             shape: (seq_len, batch_size)
             - hidden: The initial hidden states for every layer of the stacked RNN.
@@ -95,14 +108,14 @@ class RNN(nn.Module):
         Returns:
             - Logits for the softmax over output tokens at every time-step.
                   **Do NOT apply softmax to the outputs!**
-                  Pytorch's CrossEntropyLoss function (applied in ptb-lm.py) does 
+                  Pytorch's CrossEntropyLoss function (applied in ptb-lm.py) does
                   this computation implicitly.
                         shape: (seq_len, batch_size, vocab_size)
             - The final hidden states for every layer of the stacked RNN.
-                  These will be used as the initial hidden states for all the 
-                  mini-batches in an epoch, except for the first, where the return 
+                  These will be used as the initial hidden states for all the
+                  mini-batches in an epoch, except for the first, where the return
                   value of self.init_hidden will be used.
-                  See the repackage_hiddens function in ptb-lm.py for more details, 
+                  See the repackage_hiddens function in ptb-lm.py for more details,
                   if you are curious.
                         shape: (num_layers, batch_size, hidden_size)
         """
@@ -111,12 +124,15 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.embedding(inputs[ts])
             for key, layer in self.model.items():
-                i = int(key[-1])
                 if key.startswith("R"):
-                    input_ts = layer[2](layer[1](layer[0].forward(ts_input, hidden[i])))
-                    hidden[i] = input_ts
+                    i = int(key[-1])
+                    a = layer[0].forward(ts_input)
+                    b = layer[1].forward(hidden[i])
+                    # c = layer[2].forward(a + b)
+                    # ts_input = layer[3].forward(c)
+                    ts_input = a + b
+                    hidden[i] = ts_input
             logits[ts] = self.model["Last_FC"].forward(hidden[-1])
-
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
     def generate(self, input, hidden, generated_seq_len):
@@ -138,7 +154,7 @@ class RNN(nn.Module):
             - hidden: The initial hidden states for every layer of the stacked RNN.
                             shape: (num_layers, batch_size, hidden_size)
             - generated_seq_len: The length of the sequence to generate.
-                           Note that this can be different than the length used 
+                           Note that this can be different than the length used
                            for training (self.seq_len)
         Returns:
             - Sampled sequences of tokens
@@ -151,7 +167,7 @@ class RNN(nn.Module):
 # Problem 2
 class GRU(nn.Module):  # Implement a stacked GRU RNN
     """
-    Follow the same instructions as for RNN (above), but use the equations for 
+    Follow the same instructions as for RNN (above), but use the equations for
     GRU, not Vanilla RNN.
     """
 
@@ -198,25 +214,25 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
 Implement the MultiHeadedAttention module of the transformer architecture.
 All other necessary modules have already been implemented for you.
 
-We're building a transfomer architecture for next-step prediction tasks, and 
-applying it to sequential language modelling. We use a binary "mask" to specify 
+We're building a transfomer architecture for next-step prediction tasks, and
+applying it to sequential language modelling. We use a binary "mask" to specify
 which time-steps the model can use for the current prediction.
 This ensures that the model only attends to previous time-steps.
 
-The model first encodes inputs using the concatenation of a learned WordEmbedding 
+The model first encodes inputs using the concatenation of a learned WordEmbedding
 and a (in our case, hard-coded) PositionalEncoding.
 The word embedding maps a word's one-hot encoding into a dense real vector.
-The positional encoding 'tags' each element of an input sequence with a code that 
+The positional encoding 'tags' each element of an input sequence with a code that
 identifies it's position (i.e. time-step).
 
 These encodings of the inputs are then transformed repeatedly using multiple
 copies of a TransformerBlock.
-This block consists of an application of MultiHeadedAttention, followed by a 
+This block consists of an application of MultiHeadedAttention, followed by a
 standard MLP; the MLP applies *the same* mapping at every position.
-Both the attention and the MLP are applied with Resnet-style skip connections, 
+Both the attention and the MLP are applied with Resnet-style skip connections,
 and layer normalization.
 
-The complete model consists of the embeddings, the stacked transformer blocks, 
+The complete model consists of the embeddings, the stacked transformer blocks,
 and a linear layer followed by a softmax.
 """
 
