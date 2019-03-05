@@ -87,11 +87,12 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
     # Initialize all the weights uniformly in the range [-0.1, 0.1]
     # and all the biases to 0 (in place)
     for Wx, Wh in self.hidden:
-        Wx.weight.data.uniform_(-.1, .1)
-        Wh.weight.data.uniform_(-.1, .1)
-        Wx.bias.data.uniform_(0,0)
-    self.Wy.weight.data.uniform_(-.1, .1)
-    self.Wy.bias.data.uniform_(0, 0)
+        Wx.
+    #     Wx.weight.data.uniform_(-.1, .1)
+    #     Wh.weight.data.uniform_(-.1, .1)
+    #     Wx.bias.data.uniform_(0,0)
+    # self.Wy.weight.data.uniform_(-.1, .1)
+    # self.Wy.bias.data.uniform_(0, 0)
 
   def init_hidden(self):
     # TODO ========================
