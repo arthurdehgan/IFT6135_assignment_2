@@ -57,8 +57,8 @@ class RNN(nn.Module):
         for i in range(num_layers):
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).cuda()
             model[f"Wh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
-            model[f"F{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
-            model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
+            # model[f"F{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
+            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
             input_size = hidden_size
         self.fc = nn.Linear(hidden_size, vocab_size).cuda()
 
@@ -116,14 +116,13 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.embedding(inputs[ts])
             for i in range(self.num_layers):
-                ts_input = self.model[f"Wx{i}"](ts_input) + self.model[f"Wh{i}"](
-                    hidden[i]
-                )
-                ts_input = self.model[f"F{i}"](ts_input)
-                ts_input = self.model[f"D{i}"](ts_input)
-                hidden[i] = ts_input
-            out = self.fc(hidden[-1])
-            logits[ts] = out.detach().clone()
+                out = self.model[f"Wh{i}"](hidden[i].clone())
+                out = out + self.model[f"Wx{i}"](ts_input)
+                # out = self.model[f"F{i}"](out)
+                # hidden[i] = self.model[f"D{i}"](out)
+                hidden[i] = out
+                ts_input = hidden[i].clone()
+            logits[ts] = self.fc(ts_input)
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
