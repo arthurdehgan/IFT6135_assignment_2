@@ -57,7 +57,7 @@ class RNN(nn.Module):
         for i in range(num_layers):
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).cuda()
             model[f"Wh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
-            model[f"tanh"] = nn.Tanh().cuda()
+            model["tanh"] = nn.Tanh().cuda()
             # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
             # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
             input_size = hidden_size
@@ -81,12 +81,14 @@ class RNN(nn.Module):
                 nn.init.uniform_(layer.weight, -.1, .1)
                 if not key.startswith("Wh"):
                     nn.init.zeros_(layer.bias)
+        nn.init.uniform_(self.fc.weight, -.1, .1)
+        nn.init.zeros_(self.fc.bias)
 
     def init_hidden(self):
         """
         This is used for the first mini-batch in an epoch, only.
         """
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).cuda()
 
     def forward(self, inputs, hidden):
         """
@@ -213,7 +215,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
                     nn.init.zeros_(layer.bias)
 
     def init_hidden(self):
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).cuda()
 
     def forward(self, inputs, hidden):
         timesteps = len(inputs)
