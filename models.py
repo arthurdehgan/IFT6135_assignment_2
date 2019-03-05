@@ -14,15 +14,16 @@ def clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
-class Recurrent(nn.Module):
-    def __init__(self, Wx, Wh, bx):
-        super(Recurrent).__init__()
-        self.Wx = Wx
-        self.Wh = Wh
-        self.bx = bx
-
-    def forward(self, inputs, hidden):
-        return (torch.mm(self.Wx, inputs) + torch.mm(self.Wh, hidden.T) + self.bx).T
+# class Recurrent(nn.Module):
+#     def __init__(self, in_size, out_size):
+#         super(Recurrent, self).__init__()
+#         self.Wxbx = nn.Linear(in_size, out_size).cuda()
+#         self.Wh = nn.Linear(in_size, out_size, bias=False).cuda()
+#
+#     def forward(self, inputs, hidden):
+#         a = self.Wxbx(inputs)
+#         b = self.Wh(hidden)
+#         return a + b
 
 
 # Problem 1
@@ -51,18 +52,19 @@ class RNN(nn.Module):
         super(RNN, self).__init__()
 
         model = OrderedDict()
-        self.embedding = WordEmbedding(emb_size, vocab_size)
+        self.embedding = WordEmbedding(emb_size, vocab_size).cuda()
         input_size = emb_size
         for i in range(num_layers):
-            model[f"R{i}"] = (
-                Recurrent(*self.init_weights_uniform(input_size, hidden_size)),
-                nn.Linear(hidden_size, hidden_size),
-                nn.Dropout(1 - dp_keep_prob),
-            )
+            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).cuda()
+            model[f"Wh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"F{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
+            model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
             input_size = hidden_size
-        model["Last_FC"] = nn.Linear(hidden_size, vocab_size)
+        self.fc = nn.Linear(hidden_size, vocab_size).cuda()
 
         self.model = model
+        self.init_weights_uniform()
+
         self.emb_size = emb_size
         self.hidden_size = hidden_size
         self.seq_len = seq_len
@@ -71,11 +73,12 @@ class RNN(nn.Module):
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-    def init_weights_uniform(self, in_shape, out_shape):
-        Wh = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
-        Wx = torch.empty(out_shape, in_shape).uniform_(-0.1, 0.1).requires_grad_()
-        bx = torch.zeros(out_shape, 1).requires_grad_()
-        return Wx, Wh, bx
+    def init_weights_uniform(self):
+        for key, layer in self.model.items():
+            if not key.startswith("D"):
+                nn.init.uniform_(layer.weight, -.1, .1)
+                if not key.startswith("Wh"):
+                    nn.init.zeros_(layer.bias)
 
     def init_hidden(self):
         """
@@ -107,15 +110,20 @@ class RNN(nn.Module):
                         shape: (num_layers, batch_size, hidden_size)
         """
         timesteps = len(inputs)
-        logits = torch.zeros(self.seq_len, self.batch_size, self.vocab_size)
+        logits = torch.zeros(
+            (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
+        ).cuda()
         for ts in range(timesteps):
             ts_input = self.embedding(inputs[ts])
-            for key, layer in self.model.items():
-                i = int(key[-1])
-                if key.startswith("R"):
-                    input_ts = layer[2](layer[1](layer[0].forward(ts_input, hidden[i])))
-                    hidden[i] = input_ts
-            logits[ts] = self.model["Last_FC"].forward(hidden[-1])
+            for i in range(self.num_layers):
+                ts_input = self.model[f"Wx{i}"](ts_input) + self.model[f"Wh{i}"](
+                    hidden[i]
+                )
+                ts_input = self.model[f"F{i}"](ts_input)
+                ts_input = self.model[f"D{i}"](ts_input)
+                hidden[i] = ts_input
+            out = self.fc(hidden[-1])
+            logits[ts] = out.detach().clone()
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
