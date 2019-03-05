@@ -57,10 +57,12 @@ class RNN(nn.Module):
         for i in range(num_layers):
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).cuda()
             model[f"Wh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
-            # model[f"F{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
+            model[f"tanh"] = nn.Tanh().cuda()
+            # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
             # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
             input_size = hidden_size
         self.fc = nn.Linear(hidden_size, vocab_size).cuda()
+        self.dropout = nn.Dropout(1 - dp_keep_prob).cuda()
 
         self.model = model
         self.init_weights_uniform()
@@ -75,7 +77,7 @@ class RNN(nn.Module):
 
     def init_weights_uniform(self):
         for key, layer in self.model.items():
-            if not key.startswith("D"):
+            if key.startswith("W"):
                 nn.init.uniform_(layer.weight, -.1, .1)
                 if not key.startswith("Wh"):
                     nn.init.zeros_(layer.bias)
@@ -120,9 +122,9 @@ class RNN(nn.Module):
                 out = out + self.model[f"Wx{i}"](ts_input)
                 # out = self.model[f"F{i}"](out)
                 # hidden[i] = self.model[f"D{i}"](out)
-                hidden[i] = out
+                hidden[i] = self.model["tanh"](out)
                 ts_input = hidden[i].clone()
-            logits[ts] = self.fc(ts_input)
+            logits[ts] = self.dropout(self.fc(ts_input))
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
@@ -173,24 +175,73 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         dp_keep_prob,
     ):
         super(GRU, self).__init__()
-        pass
 
-        # TODO ========================
+        model = OrderedDict()
+        self.embedding = WordEmbedding(emb_size, vocab_size).cuda()
+        input_size = emb_size
+        for i in range(num_layers):
+            model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).cuda()
+            model[f"Ur{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).cuda()
+            model[f"Uz{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).cuda()
+            model[f"Uh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"tanh"] = nn.Tanh().cuda()
+            model[f"sigmoid"] = nn.Sigmoid().cuda()
+            # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
+            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
+            input_size = hidden_size
+        self.fc = nn.Linear(hidden_size, vocab_size).cuda()
+        self.dropout = nn.Dropout(1 - dp_keep_prob).cuda()
+
+        self.model = model
+        self.init_weights_uniform()
+
+        self.emb_size = emb_size
+        self.hidden_size = hidden_size
+        self.seq_len = seq_len
+        self.batch_size = batch_size
+        self.vocab_size = vocab_size
+        self.num_layers = num_layers
+        self.dp_keep_prob = dp_keep_prob
 
     def init_weights_uniform(self):
-        pass
-        # TODO ========================
+        for key, layer in self.model.items():
+            if key.startswith("W") or key.startswith("U"):
+                nn.init.uniform_(layer.weight, -.1, .1)
+                if key.startswith("W"):
+                    nn.init.zeros_(layer.bias)
 
     def init_hidden(self):
-        # TODO ========================
-        return  # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size)
 
     def forward(self, inputs, hidden):
-        # TODO ========================
+        timesteps = len(inputs)
+        logits = torch.zeros(
+            (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
+        ).cuda()
+        for ts in range(timesteps):
+            ts_input = self.embedding(inputs[ts])
+            for i in range(self.num_layers):
+                rt = self.model[f"Wr{i}"](ts_input)
+                rt = self.model["sigmoid"](rt + self.model[f"Ur{i}"](hidden[i].clone()))
+                zt = self.model[f"Wz{i}"](ts_input)
+                zt = self.model["sigmoid"](zt + self.model[f"Uz{i}"](hidden[i].clone()))
+                ht = self.model[f"Wh{i}"](ts_input)
+                ht = self.model["tanh"](
+                    ht + self.model[f"Uh{i}"](rt * hidden[i].clone())
+                )
+                out = (torch.ones(zt.shape).cuda() - zt) * hidden[i].clone() + zt * ht
+                # out = self.model[f"F{i}"](out)
+                # hidden[i] = self.model[f"D{i}"](out)
+                hidden[i] = out
+                ts_input = hidden[i].clone()
+            logits[ts] = self.dropout(self.fc(ts_input))
+
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
-    def generate(self, input, hidden, generated_seq_len):
-        # TODO ========================
+    def generate(self, inputs, hidden, generated_seq_len):
+        samples = 0
         return samples
 
 
