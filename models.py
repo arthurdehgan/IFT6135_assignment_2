@@ -43,9 +43,9 @@ class RNN(nn.Module):
         hidden_size:  The number of hidden units per layer
         seq_len:      The length of the input sequences
         vocab_size:   The number of tokens in the vocabulary (10,000 for Penn TreeBank)
-        num_layers:   The depth of the stack (i.e. the number of hidden layers at 
+        num_layers:   The depth of the stack (i.e. the number of hidden layers at
                       each time-step)
-        dp_keep_prob: The probability of *not* dropping out units in the 
+        dp_keep_prob: The probability of *not* dropping out units in the
                       non-recurrent connections.
                       Do not apply dropout on recurrent connections.
         """
@@ -93,7 +93,7 @@ class RNN(nn.Module):
     def forward(self, inputs, hidden):
         """
         Arguments:
-            - inputs: A mini-batch of input sequences, composed of integers that 
+            - inputs: A mini-batch of input sequences, composed of integers that
                         represent the index of the current token(s) in the vocabulary.
                             shape: (seq_len, batch_size)
             - hidden: The initial hidden states for every layer of the stacked RNN.
@@ -102,14 +102,14 @@ class RNN(nn.Module):
         Returns:
             - Logits for the softmax over output tokens at every time-step.
                   **Do NOT apply softmax to the outputs!**
-                  Pytorch's CrossEntropyLoss function (applied in ptb-lm.py) does 
+                  Pytorch's CrossEntropyLoss function (applied in ptb-lm.py) does
                   this computation implicitly.
                         shape: (seq_len, batch_size, vocab_size)
             - The final hidden states for every layer of the stacked RNN.
-                  These will be used as the initial hidden states for all the 
-                  mini-batches in an epoch, except for the first, where the return 
+                  These will be used as the initial hidden states for all the
+                  mini-batches in an epoch, except for the first, where the return
                   value of self.init_hidden will be used.
-                  See the repackage_hiddens function in ptb-lm.py for more details, 
+                  See the repackage_hiddens function in ptb-lm.py for more details,
                   if you are curious.
                         shape: (num_layers, batch_size, hidden_size)
         """
@@ -138,7 +138,7 @@ class RNN(nn.Module):
             - hidden: The initial hidden states for every layer of the stacked RNN.
                             shape: (num_layers, batch_size, hidden_size)
             - generated_seq_len: The length of the sequence to generate.
-                           Note that this can be different than the length used 
+                           Note that this can be different than the length used
                            for training (self.seq_len)
         Returns:
             - Sampled sequences of tokens
@@ -162,7 +162,7 @@ class RNN(nn.Module):
 # Problem 2
 class GRU(nn.Module):  # Implement a stacked GRU RNN
     """
-    Follow the same instructions as for RNN (above), but use the equations for 
+    Follow the same instructions as for RNN (above), but use the equations for
     GRU, not Vanilla RNN.
     """
 
@@ -183,11 +183,11 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         input_size = emb_size
         for i in range(num_layers):
             model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Ur{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
             model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Uz{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
             model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Uh{i}"] = nn.Linear(input_size, hidden_size, bias=False).cuda()
+            model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
             model[f"tanh"] = nn.Tanh().cuda()
             model[f"sigmoid"] = nn.Sigmoid().cuda()
             # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
@@ -258,25 +258,25 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
 Implement the MultiHeadedAttention module of the transformer architecture.
 All other necessary modules have already been implemented for you.
 
-We're building a transfomer architecture for next-step prediction tasks, and 
-applying it to sequential language modelling. We use a binary "mask" to specify 
+We're building a transfomer architecture for next-step prediction tasks, and
+applying it to sequential language modelling. We use a binary "mask" to specify
 which time-steps the model can use for the current prediction.
 This ensures that the model only attends to previous time-steps.
 
-The model first encodes inputs using the concatenation of a learned WordEmbedding 
+The model first encodes inputs using the concatenation of a learned WordEmbedding
 and a (in our case, hard-coded) PositionalEncoding.
 The word embedding maps a word's one-hot encoding into a dense real vector.
-The positional encoding 'tags' each element of an input sequence with a code that 
+The positional encoding 'tags' each element of an input sequence with a code that
 identifies it's position (i.e. time-step).
 
 These encodings of the inputs are then transformed repeatedly using multiple
 copies of a TransformerBlock.
-This block consists of an application of MultiHeadedAttention, followed by a 
+This block consists of an application of MultiHeadedAttention, followed by a
 standard MLP; the MLP applies *the same* mapping at every position.
-Both the attention and the MLP are applied with Resnet-style skip connections, 
+Both the attention and the MLP are applied with Resnet-style skip connections,
 and layer normalization.
 
-The complete model consists of the embeddings, the stacked transformer blocks, 
+The complete model consists of the embeddings, the stacked transformer blocks,
 and a linear layer followed by a softmax.
 """
 
