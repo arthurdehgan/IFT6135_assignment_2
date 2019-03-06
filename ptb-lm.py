@@ -360,7 +360,7 @@ elif args.model == "TRANSFORMER":
             vocab_size=vocab_size,
             n_units=args.hidden_size,
             n_blocks=args.num_layers,
-            dropout=1. - args.dp_keep_prob,
+            dropout=1.0 - args.dp_keep_prob,
         )
     # these 3 attributes don't affect the Transformer's computations;
     # they are only used in run_epoch
@@ -424,62 +424,61 @@ def run_epoch(model, data, is_train=False, lr=1.0):
     costs = 0.0
     iters = 0
     losses = []
-    with torch.autograd.set_detect_anomaly(True):
-        # LOOP THROUGH MINIBATCHES
-        for step, (x, y) in enumerate(ptb_iterator(data, model.batch_size, model.seq_len)):
-            if args.model == "TRANSFfORMER":
-                batch = Batch(torch.from_numpy(x).long().to(device))
-                model.zero_grad()
-                outputs = model.forward(batch.data, batch.mask).transpose(1, 0)
+    # LOOP THROUGH MINIBATCHES
+    for step, (x, y) in enumerate(ptb_iterator(data, model.batch_size, model.seq_len)):
+        if args.model == "TRANSFfORMER":
+            batch = Batch(torch.from_numpy(x).long().to(device))
+            model.zero_grad()
+            outputs = model.forward(batch.data, batch.mask).transpose(1, 0)
 
-                # print ("outputs.shape", outputs.shape)
-            else:
-                inputs = (
-                    torch.from_numpy(x.astype(np.int64))
-                    .transpose(0, 1)
-                    .contiguous()
-                    .to(device)
-                )  # .cuda()
-                model.zero_grad()
-                hidden = repackage_hidden(hidden)
-                outputs, hidden = model(inputs, hidden)
-
-            targets = (
-                torch.from_numpy(y.astype(np.int64)).transpose(0, 1).contiguous().to(device)
+            # print ("outputs.shape", outputs.shape)
+        else:
+            inputs = (
+                torch.from_numpy(x.astype(np.int64))
+                .transpose(0, 1)
+                .contiguous()
+                .to(device)
             )  # .cuda()
-            tt = torch.squeeze(targets.view(-1, model.batch_size * model.seq_len))
+            model.zero_grad()
+            hidden = repackage_hidden(hidden)
+            outputs, hidden = model(inputs, hidden)
 
-            # LOSS COMPUTATION
-            # This line currently averages across all the sequences in a mini-batch
-            # and all time-steps of the sequences.
-            # For problem 5.3, you will (instead) need to compute the average loss
-            # at each time-step separately.
-            loss = loss_fn(outputs.contiguous().view(-1, model.vocab_size), tt)
-            costs += loss.data.item() * model.seq_len
-            losses.append(costs)
-            iters += model.seq_len
-            if args.debug:
-                print(step, loss)
-            if is_train:  # Only update parameters if training
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
-                if args.optimizer == "ADAM":
-                    optimizer.step()
-                else:
-                    for p in model.parameters():
-                        if p.grad is not None:
-                            p.data.add_(-lr, p.grad.data)
-                if step % (epoch_size // 10) == 10:
-                    print(
-                        "step: "
-                        + str(step)
-                        + "\t"
-                        + "loss: "
-                        + str(costs)
-                        + "\t"
-                        + "speed (wps):"
-                        + str(iters * model.batch_size / (time.time() - start_time))
-                    )
+        targets = (
+            torch.from_numpy(y.astype(np.int64)).transpose(0, 1).contiguous().to(device)
+        )  # .cuda()
+        tt = torch.squeeze(targets.view(-1, model.batch_size * model.seq_len))
+
+        # LOSS COMPUTATION
+        # This line currently averages across all the sequences in a mini-batch
+        # and all time-steps of the sequences.
+        # For problem 5.3, you will (instead) need to compute the average loss
+        # at each time-step separately.
+        loss = loss_fn(outputs.contiguous().view(-1, model.vocab_size), tt)
+        costs += loss.data.item() * model.seq_len
+        losses.append(costs)
+        iters += model.seq_len
+        if args.debug:
+            print(step, loss)
+        if is_train:  # Only update parameters if training
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+            if args.optimizer == "ADAM":
+                optimizer.step()
+            else:
+                for p in model.parameters():
+                    if p.grad is not None:
+                        p.data.add_(-lr, p.grad.data)
+            if step % (epoch_size // 10) == 10:
+                print(
+                    "step: "
+                    + str(step)
+                    + "\t"
+                    + "loss: "
+                    + str(costs)
+                    + "\t"
+                    + "speed (wps):"
+                    + str(iters * model.batch_size / (time.time() - start_time))
+                )
     return np.exp(costs / iters), losses
 
 
