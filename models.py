@@ -5,7 +5,6 @@ import numpy as np
 import torch.nn.functional as F
 import math, copy, time
 from torch.autograd import Variable
-import matplotlib.pyplot as plt
 from collections import OrderedDict
 
 
