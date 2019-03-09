@@ -7,6 +7,17 @@ import math, copy, time
 from torch.autograd import Variable
 from collections import OrderedDict
 
+# Use the GPU if you have one
+if torch.cuda.is_available():
+    print("Using the GPU")
+    device = torch.device("cuda")
+else:
+    print(
+        "WARNING: You are about to run on cpu, and this will likely run out \
+      of memory. \n You can try setting batch_size=1 to reduce memory usage"
+    )
+    device = torch.device("cpu")
+
 
 def clones(module, N):
     "A helper function for producing N identical layers (each with their own parameters)."
@@ -16,8 +27,8 @@ def clones(module, N):
 # class Recurrent(nn.Module):
 #     def __init__(self, in_size, out_size):
 #         super(Recurrent, self).__init__()
-#         self.Wxbx = nn.Linear(in_size, out_size).cuda()
-#         self.Wh = nn.Linear(in_size, out_size, bias=False).cuda()
+#         self.Wxbx = nn.Linear(in_size, out_size).to(device)
+#         self.Wh = nn.Linear(in_size, out_size, bias=False).to(device)
 #
 #     def forward(self, inputs, hidden):
 #         a = self.Wxbx(inputs)
@@ -51,17 +62,17 @@ class RNN(nn.Module):
         super(RNN, self).__init__()
 
         model = OrderedDict()
-        self.embedding = WordEmbedding(emb_size, vocab_size).cuda()
+        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
         input_size = emb_size
         for i in range(num_layers):
-            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
-            model["tanh"] = nn.Tanh().cuda()
-            # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
-            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
+            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
+            model["tanh"] = nn.Tanh().to(device)
+            # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).to(device)
+            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).to(device)
             input_size = hidden_size
-        self.fc = nn.Linear(hidden_size, vocab_size).cuda()
-        self.dropout = nn.Dropout(1 - dp_keep_prob).cuda()
+        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
+        self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
 
         self.model = model
         self.init_weights_uniform()
@@ -75,19 +86,24 @@ class RNN(nn.Module):
         self.dp_keep_prob = dp_keep_prob
 
     def init_weights_uniform(self):
-        for key, layer in self.model.items():
-            if key.startswith("W"):
-                nn.init.uniform_(layer.weight, -.1, .1)
-                if not key.startswith("Wh"):
-                    nn.init.zeros_(layer.bias)
+        #  WE DO NOT HAVE TO INITIALIZE OURSELF THE WEIGHTS AND BIAS OF RECURRENT UNITS
+        # for key, layer in self.model.items():
+        #     if key.startswith("W"):
+        #         nn.init.uniform_(layer.weight, -.1, .1)
+        #         if not key.startswith("Wh"):
+        #             nn.init.zeros_(layer.bias)
+
+        # ONLY OUTPUT LAYER AND WORD EMBEDDING LAYER
         nn.init.uniform_(self.fc.weight, -.1, .1)
         nn.init.zeros_(self.fc.bias)
+        nn.init.uniform_(self.embedding.lut.weight, -.1, .1)
+
 
     def init_hidden(self):
         """
         This is used for the first mini-batch in an epoch, only.
         """
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).cuda()
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(device)
 
     def forward(self, inputs, hidden):
         """
@@ -115,17 +131,17 @@ class RNN(nn.Module):
         timesteps = len(inputs)
         logits = torch.zeros(
             (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
-        ).cuda()
+        ).to(device)
         for ts in range(timesteps):
-            ts_input = self.embedding(inputs[ts])
+            ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
                 out = self.model[f"Wh{i}"](hidden[i].clone())
                 out = out + self.model[f"Wx{i}"](ts_input)
                 # out = self.model[f"F{i}"](out)
                 # hidden[i] = self.model[f"D{i}"](out)
-                hidden[i] = self.model["tanh"](out)
+                hidden[i] = self.dropout(self.model["tanh"](out))
                 ts_input = hidden[i].clone()
-            logits[ts] = self.dropout(self.fc(ts_input))
+            logits[ts] = self.fc(ts_input)
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
@@ -178,22 +194,22 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         super(GRU, self).__init__()
 
         model = OrderedDict()
-        self.embedding = WordEmbedding(emb_size, vocab_size).cuda()
+        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
         input_size = emb_size
         for i in range(num_layers):
-            model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
-            model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
-            model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).cuda()
-            model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).cuda()
-            model[f"tanh"] = nn.Tanh().cuda()
-            model[f"sigmoid"] = nn.Sigmoid().cuda()
-            # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).cuda()
-            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).cuda()
+            model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
+            model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
+            model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
+            model[f"tanh"] = nn.Tanh().to(device)
+            model[f"sigmoid"] = nn.Sigmoid().to(device)
+            # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).to(device)
+            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).to(device)
             input_size = hidden_size
-        self.fc = nn.Linear(hidden_size, vocab_size).cuda()
-        self.dropout = nn.Dropout(1 - dp_keep_prob).cuda()
+        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
+        self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
 
         self.model = model
         self.init_weights_uniform()
@@ -207,22 +223,25 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.dp_keep_prob = dp_keep_prob
 
     def init_weights_uniform(self):
-        for key, layer in self.model.items():
-            if key.startswith("W") or key.startswith("U"):
-                nn.init.uniform_(layer.weight, -.1, .1)
-                if key.startswith("W"):
-                    nn.init.zeros_(layer.bias)
+        # for key, layer in self.model.items():
+        #     if key.startswith("W") or key.startswith("U"):
+        #         nn.init.uniform_(layer.weight, -.1, .1)
+        #         if key.startswith("W"):
+        #             nn.init.zeros_(layer.bias)
+        nn.init.uniform_(self.fc.weight, -.1, .1 )
+        nn.init.zeros_(self.fc.bias )
+        nn.init.uniform_(self.embedding.lut.weight, -.1, .1)
 
     def init_hidden(self):
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).cuda()
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(device)
 
     def forward(self, inputs, hidden):
         timesteps = len(inputs)
         logits = torch.zeros(
             (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
-        ).cuda()
+        ).to(device)
         for ts in range(timesteps):
-            ts_input = self.embedding(inputs[ts])
+            ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
                 rt = self.model[f"Wr{i}"](ts_input)
                 rt = self.model["sigmoid"](rt + self.model[f"Ur{i}"](hidden[i].clone()))
@@ -232,12 +251,12 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
                 ht = self.model["tanh"](
                     ht + self.model[f"Uh{i}"](rt * hidden[i].clone())
                 )
-                out = (torch.ones(zt.shape).cuda() - zt) * hidden[i].clone() + zt * ht
+                out = (torch.ones(zt.shape).to(device) - zt) * hidden[i].clone() + zt * ht
                 # out = self.model[f"F{i}"](out)
                 # hidden[i] = self.model[f"D{i}"](out)
-                hidden[i] = out
+                hidden[i] = self.dropout(out)
                 ts_input = hidden[i].clone()
-            logits[ts] = self.dropout(self.fc(ts_input))
+            logits[ts] = self.fc(ts_input)
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 

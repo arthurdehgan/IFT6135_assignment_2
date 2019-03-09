@@ -112,7 +112,7 @@ parser.add_argument(
 parser.add_argument(
     "--model",
     type=str,
-    default="RNN",
+    default="GRU",
     help="type of recurrent net (RNN, GRU, TRANSFORMER)",
 )
 parser.add_argument(
