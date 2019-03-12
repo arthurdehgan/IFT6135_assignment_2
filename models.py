@@ -396,13 +396,14 @@ class MultiHeadedAttention(nn.Module):
         
         if mask is not None:
             # Same mask applied to all h heads.
-            mask = mask.view(batch_size, 1, seq_len, seq_len)
+            # mask = mask.view(batch_size, 1, seq_len, seq_len)
+            mask = mask.unsqueeze(1)
         
         query_embedding = self.embedding_layers[0](query).view(batch_size, self.n_heads, seq_len, self.d_k)
         key_embedding = self.embedding_layers[1](key).view(batch_size, self.n_heads, self.d_k, seq_len)
         value_embedding = self.embedding_layers[2](value).view(batch_size, self.n_heads, seq_len, self.d_k)
         
-        output = self.SingleAttention(query_embedding, key_embedding, value_embedding, mask, self.dropout_layer).view(batch_size, seq_len, self.n_heads, self.d_k)
+        output = self.SingleAttention(query_embedding, key_embedding, value_embedding, mask, self.dropout_layer).transpose(1, 2)
         # Concatenate outputs for each head
         output = output.contiguous().view(batch_size, seq_len, self.n_heads * self.d_k)
         
