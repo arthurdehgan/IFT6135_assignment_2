@@ -325,7 +325,7 @@ and a linear layer followed by a softmax.
 
 # ----------------------------------------------------------------------------------
 
-# TODO: implement this class
+# implement this class
 class MultiHeadedAttention(nn.Module):
     def __init__(self, n_heads, n_units, dropout=0.1):
         """
@@ -334,31 +334,84 @@ class MultiHeadedAttention(nn.Module):
         dropout: probability of DROPPING units
         """
         super(MultiHeadedAttention, self).__init__()
-        # This sets the size of the keys, values, and queries (self.d_k) to all
+        # This sets the size of the keys, values, and queries (self.d_k) to all 
         # be equal to the number of output units divided by the number of heads.
         self.d_k = n_units // n_heads
         # This requires the number of n_heads to evenly divide n_units.
         assert n_units % n_heads == 0
         self.n_units = n_units
 
-        # TODO: create/initialize any necessary parameters or layers
-        # Note: the only Pytorch modules you are allowed to use are nn.Linear
+        # create/initialize any necessary parameters or layers
+        # Note: the only Pytorch modules you are allowed to use are nn.Linear 
         # and nn.Dropout
-
+        
+        self.n_heads = n_heads
+        
+        # Create 4 embedding layers. One for each of Q, K, V, and output.
+        embedding_layer = nn.Linear(n_units, n_units)
+        self.embedding_layers = clones(embedding_layer, 4)
+        
+        self.dropout_layer = nn.Dropout(p=dropout)
+        
+    # A single attention head given Q, K, V embeddings    
+    def SingleAttention(self, query, key, value, mask=None, dropout_layer=None):
+        # Matrix multiply Q and K
+        soft_attention = torch.matmul(query, key)
+        
+        # Scale soft attention
+        soft_attention = soft_attention / np.sqrt(self.d_k)
+        
+        # Mask
+        epsilon = 1e9
+        if mask is not None:
+            # soft_attention = torch.mul(soft_attention, mask)
+            # Subtract epsilon for numerical stability.
+            # soft_attention = soft_attention - eps * (1 - mask)
+            # we can simply use masked fill following the given
+            # implementation with epsilon as per the assignment description
+            soft_attention = soft_attention.masked_fill(mask == 0, -epsilon)
+            
+        # Softmax on the ouputs
+        soft_attention = F.softmax(soft_attention, dim=-1)
+        
+        # Dropout
+        if dropout_layer is not None:
+            soft_attention = dropout_layer(soft_attention)
+        
+        # Apply attention
+        output = torch.matmul(soft_attention, value)
+        
+        return output
+        
     def forward(self, query, key, value, mask=None):
-        # TODO: implement the masked multi-head attention.
+        # implement the masked multi-head attention.
         # query, key, and value all have size: (batch_size, seq_len, self.n_units, self.d_k)
         # mask has size: (batch_size, seq_len, seq_len)
-        # As described in the .tex, apply input masking to the softmax
+        # As described in the .tex, apply input masking to the softmax 
         # generating the "attention values" (i.e. A_i in the .tex)
         # Also apply dropout to the attention values.
+        
+        batch_size = query.size(0)
+        seq_len = query.size(1)
+        
+        if mask is not None:
+            # Same mask applied to all h heads.
+            mask = mask.view(batch_size, 1, seq_len, seq_len)
+        
+        query_embedding = self.embedding_layers[0](query).view(batch_size, self.n_heads, seq_len, self.d_k)
+        key_embedding = self.embedding_layers[1](key).view(batch_size, self.n_heads, self.d_k, seq_len)
+        value_embedding = self.embedding_layers[2](value).view(batch_size, self.n_heads, seq_len, self.d_k)
+        
+        output = self.SingleAttention(query_embedding, key_embedding, value_embedding, mask, self.dropout_layer).view(batch_size, seq_len, self.n_heads, self.d_k)
+        # Concatenate outputs for each head
+        output = output.contiguous().view(batch_size, seq_len, self.n_heads * self.d_k)
+        
+        output_embedding = self.embedding_layers[3](output)
 
-        return  # size: (batch_size, seq_len, self.n_units)
+        return output_embedding
 
-
-# ----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # The encodings of elements of the input sequence
-
 
 class WordEmbedding(nn.Module):
     def __init__(self, n_units, vocab):
