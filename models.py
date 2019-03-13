@@ -401,9 +401,9 @@ class MultiHeadedAttention(nn.Module):
         
         query_embedding = self.embedding_layers[0](query).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
         
-        key_embedding = self.embedding_layers[1](key).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2).transpose(-2, -1)
+        key_embedding = self.embedding_layers[1](key).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2).transpose(-2, -1)
         
-        value_embedding = self.embedding_layers[2](value).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+        value_embedding = self.embedding_layers[2](value).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
         
         output = self.SingleAttention(query_embedding, key_embedding, value_embedding, mask, self.dropout_layer).transpose(1, 2)
         # Concatenate outputs for each head
