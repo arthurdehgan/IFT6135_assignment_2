@@ -63,16 +63,16 @@ class RNN(nn.Module):
 
         model = OrderedDict()
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size
+        input_size = emb_size + hidden_size
         for i in range(num_layers):
-            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            model["tanh"] = nn.Tanh().to(device)
+            model[f"REC_{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            # model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
             # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).to(device)
             # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).to(device)
-            input_size = hidden_size
+            input_size = hidden_size * 2
         self.fc = nn.Linear(hidden_size, vocab_size).to(device)
         self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
+        self.tanh = nn.Tanh().to(device)
 
         self.model = model
         self.init_weights_uniform()
@@ -94,16 +94,17 @@ class RNN(nn.Module):
         #             nn.init.zeros_(layer.bias)
 
         # ONLY OUTPUT LAYER AND WORD EMBEDDING LAYER
-        nn.init.uniform_(self.fc.weight, -.1, .1)
+        nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
-        nn.init.uniform_(self.embedding.lut.weight, -.1, .1)
-
+        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
 
     def init_hidden(self):
         """
         This is used for the first mini-batch in an epoch, only.
         """
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(device)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(
+            device
+        )
 
     def forward(self, inputs, hidden):
         """
@@ -135,11 +136,11 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                out = self.model[f"Wh{i}"](hidden[i].clone())
-                out = out + self.model[f"Wx{i}"](ts_input)
+                out = self.model[f"REC_{i}"](torch.cat(hidden[i].clone(), ts_input, 1))
+                # out = self.model[f"W{i}"](hidden[i].clone())
+                # out = out + self.model[f"Wx{i}"](ts_input)
                 # out = self.model[f"F{i}"](out)
-                # hidden[i] = self.model[f"D{i}"](out)
-                hidden[i] = self.dropout(self.model["tanh"](out))
+                hidden[i] = self.dropout(self.tanh(out))
                 ts_input = hidden[i].clone()
             logits[ts] = self.fc(ts_input)
 
@@ -228,12 +229,14 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         #         nn.init.uniform_(layer.weight, -.1, .1)
         #         if key.startswith("W"):
         #             nn.init.zeros_(layer.bias)
-        nn.init.uniform_(self.fc.weight, -.1, .1 )
-        nn.init.zeros_(self.fc.bias )
-        nn.init.uniform_(self.embedding.lut.weight, -.1, .1)
+        nn.init.uniform_(self.fc.weight, -0.1, 0.1)
+        nn.init.zeros_(self.fc.bias)
+        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
 
     def init_hidden(self):
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(device)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(
+            device
+        )
 
     def forward(self, inputs, hidden):
         timesteps = len(inputs)
@@ -251,7 +254,9 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
                 ht = self.model["tanh"](
                     ht + self.model[f"Uh{i}"](rt * hidden[i].clone())
                 )
-                out = (torch.ones(zt.shape).to(device) - zt) * hidden[i].clone() + zt * ht
+                out = (torch.ones(zt.shape).to(device) - zt) * hidden[
+                    i
+                ].clone() + zt * ht
                 # out = self.model[f"F{i}"](out)
                 # hidden[i] = self.model[f"D{i}"](out)
                 hidden[i] = self.dropout(out)
@@ -334,7 +339,7 @@ class MultiHeadedAttention(nn.Module):
         dropout: probability of DROPPING units
         """
         super(MultiHeadedAttention, self).__init__()
-        # This sets the size of the keys, values, and queries (self.d_k) to all 
+        # This sets the size of the keys, values, and queries (self.d_k) to all
         # be equal to the number of output units divided by the number of heads.
         self.d_k = n_units // n_heads
         # This requires the number of n_heads to evenly divide n_units.
@@ -342,25 +347,25 @@ class MultiHeadedAttention(nn.Module):
         self.n_units = n_units
 
         # create/initialize any necessary parameters or layers
-        # Note: the only Pytorch modules you are allowed to use are nn.Linear 
+        # Note: the only Pytorch modules you are allowed to use are nn.Linear
         # and nn.Dropout
-        
+
         self.n_heads = n_heads
-        
+
         # Create 4 embedding layers. One for each of Q, K, V, and output.
         embedding_layer = nn.Linear(n_units, n_units)
         self.embedding_layers = clones(embedding_layer, 4)
-        
+
         self.dropout_layer = nn.Dropout(p=dropout)
-        
-    # A single attention head given Q, K, V embeddings    
+
+    # A single attention head given Q, K, V embeddings
     def SingleAttention(self, query, key, value, mask=None, dropout_layer=None):
         # Matrix multiply Q and K
         soft_attention = torch.matmul(query, key)
-        
+
         # Scale soft attention
         soft_attention = soft_attention / np.sqrt(self.d_k)
-        
+
         # Mask
         epsilon = 1e9
         if mask is not None:
@@ -370,51 +375,68 @@ class MultiHeadedAttention(nn.Module):
             # we can simply use masked fill following the given
             # implementation with epsilon as per the assignment description
             soft_attention = soft_attention.masked_fill(mask == 0, -epsilon)
-            
+
         # Softmax on the ouputs
         soft_attention = F.softmax(soft_attention, dim=-1)
-        
+
         # Dropout
         if dropout_layer is not None:
             soft_attention = dropout_layer(soft_attention)
-        
+
         # Apply attention
         output = torch.matmul(soft_attention, value)
-        
+
         return output
-        
+
     def forward(self, query, key, value, mask=None):
         # implement the masked multi-head attention.
         # query, key, and value all have size: (batch_size, seq_len, self.n_units, self.d_k)
         # mask has size: (batch_size, seq_len, seq_len)
-        # As described in the .tex, apply input masking to the softmax 
+        # As described in the .tex, apply input masking to the softmax
         # generating the "attention values" (i.e. A_i in the .tex)
         # Also apply dropout to the attention values.
-        
+
         batch_size = query.size(0)
         seq_len = query.size(1)
-        
+
         if mask is not None:
             # Same mask applied to all h heads.
             # mask = mask.view(batch_size, 1, seq_len, seq_len)
             mask = mask.unsqueeze(1)
-        
-        query_embedding = self.embedding_layers[0](query).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
-        
-        key_embedding = self.embedding_layers[1](key).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2).transpose(-2, -1)
-        
-        value_embedding = self.embedding_layers[2](value).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
-        
-        output = self.SingleAttention(query_embedding, key_embedding, value_embedding, mask, self.dropout_layer).transpose(1, 2)
+
+        query_embedding = (
+            self.embedding_layers[0](query)
+            .view(batch_size, seq_len, self.n_heads, self.d_k)
+            .transpose(1, 2)
+        )
+
+        key_embedding = (
+            self.embedding_layers[1](key)
+            .view(batch_size, seq_len, self.n_heads, self.d_k)
+            .transpose(1, 2)
+            .transpose(-2, -1)
+        )
+
+        value_embedding = (
+            self.embedding_layers[2](value)
+            .view(batch_size, seq_len, self.n_heads, self.d_k)
+            .transpose(1, 2)
+        )
+
+        output = self.SingleAttention(
+            query_embedding, key_embedding, value_embedding, mask, self.dropout_layer
+        ).transpose(1, 2)
         # Concatenate outputs for each head
         output = output.contiguous().view(batch_size, seq_len, self.n_heads * self.d_k)
-        
+
         output_embedding = self.embedding_layers[3](output)
 
         return output_embedding
 
-#----------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------
 # The encodings of elements of the input sequence
+
 
 class WordEmbedding(nn.Module):
     def __init__(self, n_units, vocab):
