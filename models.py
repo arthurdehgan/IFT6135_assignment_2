@@ -61,11 +61,11 @@ class RNN(nn.Module):
         """
         super(RNN, self).__init__()
 
-        model = OrderedDict()
+        model = []
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
         input_size = emb_size + hidden_size
-        for i in range(num_layers):
-            model[f"REC_{i}"] = nn.Linear(input_size, hidden_size).to(device)
+        for _ in range(num_layers):
+            model.append(nn.Linear(input_size, hidden_size).to(device))
             # model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
             # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).to(device)
             # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).to(device)
@@ -74,7 +74,7 @@ class RNN(nn.Module):
         self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
         self.tanh = nn.Tanh().to(device)
 
-        self.model = model
+        self.model = nn.ModuleList(model).to(device)
         self.init_weights_uniform()
 
         self.emb_size = emb_size
@@ -136,7 +136,8 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                out = self.model[f"REC_{i}"](torch.cat(hidden[i].clone(), ts_input, 1))
+                out = self.model[i](torch.cat((hidden[i].clone(), ts_input), 1))
+                # out = self.model[f"REC_{i}"](torch.cat(hidden[i].clone(), ts_input, 1))
                 # out = self.model[f"W{i}"](hidden[i].clone())
                 # out = out + self.model[f"Wx{i}"](ts_input)
                 # out = self.model[f"F{i}"](out)
