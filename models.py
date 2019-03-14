@@ -195,23 +195,20 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
     ):
         super(GRU, self).__init__()
 
-        model = OrderedDict()
+        model = {}
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size
+        input_size = emb_size + hidden_size
         for i in range(num_layers):
             model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
             model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
             model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            model[f"tanh"] = nn.Tanh().to(device)
-            model[f"sigmoid"] = nn.Sigmoid().to(device)
             # model[f"W{i}"] = nn.Linear(hidden_size, hidden_size).to(device)
             # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).to(device)
-            input_size = hidden_size
+            input_size = hidden_size * 2
         self.fc = nn.Linear(hidden_size, vocab_size).to(device)
         self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
+        self.tanh = nn.Tanh().to(device)
+        self.sigmoid = nn.Sigmoid().to(device)
 
         self.model = model
         self.init_weights_uniform()
@@ -247,19 +244,18 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                rt = self.model[f"Wr{i}"](ts_input)
-                rt = self.model["sigmoid"](rt + self.model[f"Ur{i}"](hidden[i].clone()))
-                zt = self.model[f"Wz{i}"](ts_input)
-                zt = self.model["sigmoid"](zt + self.model[f"Uz{i}"](hidden[i].clone()))
-                ht = self.model[f"Wh{i}"](ts_input)
-                ht = self.model["tanh"](
-                    ht + self.model[f"Uh{i}"](rt * hidden[i].clone())
+                rt = self.sigmoid(
+                    self.model[f"Wr{i}"](torch.cat((hidden[i].clone(), ts_input), 1))
                 )
-                out = (torch.ones(zt.shape).to(device) - zt) * hidden[
-                    i
-                ].clone() + zt * ht
-                # out = self.model[f"F{i}"](out)
-                # hidden[i] = self.model[f"D{i}"](out)
+                zt = self.sigmoid(
+                    self.model[f"Wz{i}"](torch.cat((hidden[i].clone(), ts_input), 1))
+                )
+                ht = self.tanh(
+                    self.model[f"Wh{i}"](
+                        torch.cat((rt * hidden[i].clone(), ts_input), 1)
+                    )
+                )
+                out = (1 - zt) * hidden[i].clone() + zt * ht
                 hidden[i] = self.dropout(out)
                 ts_input = hidden[i].clone()
             logits[ts] = self.fc(ts_input)
