@@ -426,7 +426,7 @@ def run_epoch(model, data, is_train=False, lr=1.0):
     losses = []
     # LOOP THROUGH MINIBATCHES
     for step, (x, y) in enumerate(ptb_iterator(data, model.batch_size, model.seq_len)):
-        if args.model == "TRANSFfORMER":
+        if args.model == "TRANSFORMER":
             batch = Batch(torch.from_numpy(x).long().to(device))
             model.zero_grad()
             outputs = model.forward(batch.data, batch.mask).transpose(1, 0)
