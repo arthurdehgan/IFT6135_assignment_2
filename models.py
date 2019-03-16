@@ -217,15 +217,15 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
             for i in range(self.num_layers):
                 rt = self.sigmoid(
                     self.model[f"Wr{i}"](ts_input)
-                    + self.model["Ur{i}"](hidden[i].clone())
+                    + self.model[f"Ur{i}"](hidden[i].clone())
                 )
                 zt = self.sigmoid(
                     self.model[f"Wz{i}"](ts_input)
-                    + self.model["Uz{i}"](hidden[i].clone())
+                    + self.model[f"Uz{i}"](hidden[i].clone())
                 )
                 ht = self.tanh(
                     self.model[f"Wh{i}"](ts_input)
-                    + self.model["Uh{i}"](rt * hidden[i].clone())
+                    + self.model[f"Uh{i}"](rt * hidden[i].clone())
                 )
                 out = (1 - zt) * hidden[i].clone() + zt * ht
                 hidden[i] = self.dropout(out)
