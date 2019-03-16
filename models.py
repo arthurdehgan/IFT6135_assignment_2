@@ -24,18 +24,6 @@ def clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
-# class Recurrent(nn.Module):
-#     def __init__(self, in_size, out_size):
-#         super(Recurrent, self).__init__()
-#         self.Wxbx = nn.Linear(in_size, out_size).to(device)
-#         self.Wh = nn.Linear(in_size, out_size, bias=False).to(device)
-#
-#     def forward(self, inputs, hidden):
-#         a = self.Wxbx(inputs)
-#         b = self.Wh(hidden)
-#         return a + b
-
-
 # Problem 1
 class RNN(nn.Module):
     def __init__(
@@ -61,23 +49,17 @@ class RNN(nn.Module):
         """
         super(RNN, self).__init__()
 
-        # model = []
         model = nn.ModuleDict().to(device)
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
         input_size = emb_size
-        # input_size = emb_size + hidden_size
         for i in range(num_layers):
-            # model.append(nn.Linear(input_size, hidden_size).to(device))
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).to(device)
             model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            # model[f"D{i}"] = nn.Dropout(1 - dp_keep_prob).to(device)
-            # input_size = hidden_size * 2
             input_size = hidden_size
         self.fc = nn.Linear(hidden_size, vocab_size).to(device)
         self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
         self.tanh = nn.Tanh().to(device)
 
-        # self.model = nn.ModuleList(model).to(device)
         self.model = model
         self.init_weights_uniform()
 
@@ -90,14 +72,6 @@ class RNN(nn.Module):
         self.dp_keep_prob = dp_keep_prob
 
     def init_weights_uniform(self):
-        #  WE DO NOT HAVE TO INITIALIZE OURSELF THE WEIGHTS AND BIAS OF RECURRENT UNITS
-        # for key, layer in self.model.items():
-        #     if key.startswith("W"):
-        #         nn.init.uniform_(layer.weight, -.1, .1)
-        #         if not key.startswith("Wh"):
-        #             nn.init.zeros_(layer.bias)
-
-        # ONLY OUTPUT LAYER AND WORD EMBEDDING LAYER
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
         nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
@@ -140,11 +114,8 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                # out = self.model[i](torch.cat((hidden[i].clone(), ts_input), 1))
-                # out = self.model[f"REC_{i}"](torch.cat(hidden[i].clone(), ts_input, 1))
                 out = self.model[f"Wh{i}"](hidden[i].clone())
                 out = out + self.model[f"Wx{i}"](ts_input)
-                # out = self.model[f"F{i}"](out)
                 hidden[i] = self.dropout(self.tanh(out))
                 ts_input = hidden[i].clone()
             logits[ts] = self.fc(ts_input)
@@ -224,11 +195,6 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.dp_keep_prob = dp_keep_prob
 
     def init_weights_uniform(self):
-        # for key, layer in self.model.items():
-        #     if key.startswith("W") or key.startswith("U"):
-        #         nn.init.uniform_(layer.weight, -.1, .1)
-        #         if key.startswith("W"):
-        #             nn.init.zeros_(layer.bias)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
         nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
