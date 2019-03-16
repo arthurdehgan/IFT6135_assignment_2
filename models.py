@@ -172,12 +172,15 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
 
         model = nn.ModuleDict().to(device)
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size + hidden_size
+        input_size = emb_size
         for i in range(num_layers):
             model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
             model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).to(device)
+            model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
             model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            input_size = hidden_size * 2
+            model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
+            input_size = hidden_size
         self.fc = nn.Linear(hidden_size, vocab_size).to(device)
         self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
         self.tanh = nn.Tanh().to(device)
@@ -213,15 +216,16 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
                 rt = self.sigmoid(
-                    self.model[f"Wr{i}"](torch.cat((hidden[i].clone(), ts_input), 1))
+                    self.model[f"Wr{i}"](ts_input)
+                    + self.model["Ur{i}"](hidden[i].clone())
                 )
                 zt = self.sigmoid(
-                    self.model[f"Wz{i}"](torch.cat((hidden[i].clone(), ts_input), 1))
+                    self.model[f"Wz{i}"](ts_input)
+                    + self.model["Uz{i}"](hidden[i].clone())
                 )
                 ht = self.tanh(
-                    self.model[f"Wh{i}"](
-                        torch.cat((rt * hidden[i].clone(), ts_input), 1)
-                    )
+                    self.model[f"Wh{i}"](ts_input)
+                    + self.model["Uh{i}"](rt * hidden[i].clone())
                 )
                 out = (1 - zt) * hidden[i].clone() + zt * ht
                 hidden[i] = self.dropout(out)
