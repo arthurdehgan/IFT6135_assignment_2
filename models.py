@@ -322,6 +322,10 @@ class MultiHeadedAttention(nn.Module):
         # Create 4 embedding layers. One for each of Q, K, V, and output.
         embedding_layer = nn.Linear(n_units, n_units)
         self.embedding_layers = clones(embedding_layer, 4)
+        
+        ki = np.sqrt(1 / n_units)
+        for l in self.embedding_layers:
+            nn.init.uniform_(l.weight, -ki, ki)
 
         self.dropout_layer = nn.Dropout(p=dropout)
 
