@@ -208,9 +208,9 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        nn.init.uniform_(self.fc.weight, -0.1, 0.1)
-        nn.init.zeros_(self.fc.bias)
-        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
+        torch.nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        torch.nn.init.uniform_(self.linear_layers[-1].weight, -0.1, 0.1)
+        torch.nn.init.zeros_(self.linear_layers[-1].bias)
 
     def init_hidden(self):
         return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(
