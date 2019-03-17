@@ -49,13 +49,12 @@ class RNN(nn.Module):
         """
         super(RNN, self).__init__()
 
-        model = nn.ModuleDict().to(device)
+        model = nn.ModuleList().to(device)
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size
+        input_size = emb_size + hidden_size
         for i in range(num_layers):
-            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            input_size = hidden_size
+            model.append(nn.Linear(input_size, hidden_size).to(device))
+            input_size = hidden_size * 2
         self.fc = nn.Linear(hidden_size, vocab_size).to(device)
         self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
         self.tanh = nn.Tanh().to(device)
@@ -114,8 +113,7 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                out = self.model[f"Wh{i}"](hidden[i].clone())
-                out = out + self.model[f"Wx{i}"](ts_input)
+                out = self.model[i](torch.cat((hidden[i].clone(), ts_input), 1))
                 hidden[i] = self.dropout(self.tanh(out))
                 ts_input = hidden[i].clone()
             logits[ts] = self.fc(ts_input)
