@@ -167,26 +167,6 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         dp_keep_prob,
     ):
         super(GRU, self).__init__()
-
-        model = nn.ModuleDict().to(device)
-        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size
-        for i in range(num_layers):
-            model[f"Wr{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            model[f"Wz{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            model[f"Wh{i}"] = nn.Linear(input_size, hidden_size).to(device)
-            model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False).to(device)
-            input_size = hidden_size
-        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
-        self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
-        self.tanh = nn.Tanh().to(device)
-        self.sigmoid = nn.Sigmoid().to(device)
-
-        self.model = model
-        self.init_weights_uniform()
-
         self.emb_size = emb_size
         self.hidden_size = hidden_size
         self.seq_len = seq_len
@@ -194,6 +174,38 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.vocab_size = vocab_size
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
+
+        self.embedding = nn.Embedding(vocab_size, emb_size)  # Word Embedding Layer
+
+        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
+        self.model_z = nn.ModuleList([first_layer])
+        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
+        self.model_z.extend(clones(rest_layer, self.num_layers - 1))
+
+        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
+        self.model_r = nn.ModuleList([first_layer])
+        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
+        self.model_r.extend(clones(rest_layer, self.num_layers - 1))
+
+        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
+        self.model_h = nn.ModuleList([first_layer])
+        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
+        self.model_h.extend(clones(rest_layer, self.num_layers - 1))
+
+        self.linear_layers = clones(
+            nn.Linear(hidden_size, hidden_size), num_layers - 1
+        )  # FC Layers
+        self.linear_layers.append(nn.Linear(hidden_size, vocab_size))
+
+        self.dropout_layers = clones(
+            nn.Dropout(p=1 - dp_keep_prob), num_layers
+        )  # Dropout Layers :
+        self.input_emb = nn.Dropout(p=1 - dp_keep_prob)
+
+        # self.tanh = nn.Tanh()
+        self.sigm = nn.Sigmoid()
+
+        self.init_weights()
 
     def init_weights_uniform(self):
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
@@ -206,31 +218,52 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         )
 
     def forward(self, inputs, hidden):
-        timesteps = len(inputs)
-        logits = torch.zeros(
-            (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
-        ).to(device)
-        for ts in range(timesteps):
-            ts_input = self.dropout(self.embedding(inputs[ts]))
-            for i in range(self.num_layers):
-                rt = self.sigmoid(
-                    self.model[f"Wr{i}"](ts_input)
-                    + self.model[f"Ur{i}"](hidden[i].clone())
-                )
-                zt = self.sigmoid(
-                    self.model[f"Wz{i}"](ts_input)
-                    + self.model[f"Uz{i}"](hidden[i].clone())
-                )
-                ht = self.tanh(
-                    self.model[f"Wh{i}"](ts_input)
-                    + self.model[f"Uh{i}"](rt * hidden[i].clone())
-                )
-                out = (1 - zt) * hidden[i].clone() + zt * ht
-                hidden[i] = self.dropout(out)
-                ts_input = hidden[i].clone()
-            logits[ts] = self.fc(ts_input)
+        emb_inputs = self.embedding(inputs)
+        emb_inputs = self.input_emb(emb_inputs)
 
-        return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
+        logits = torch.zeros(
+            [self.seq_len, self.batch_size, self.vocab_size],
+            dtype=hidden.dtype,
+            device=hidden.device,
+        )
+
+        for seq in range(self.seq_len):
+            hid_new = []
+            for j in range(self.num_layers):
+                if j == 0:
+
+                    r = torch.sigmoid(
+                        self.model_r[j](torch.cat([hidden[j], emb_inputs[seq]], 1))
+                    )
+                    z = torch.sigmoid(
+                        self.model_z[j](torch.cat([hidden[j], emb_inputs[seq]], 1))
+                    )
+                    h = torch.tanh(
+                        self.model_h[j](torch.cat([r * hidden[j], emb_inputs[seq]], 1))
+                    )
+                    outputs = (1 - z) * hidden[j] + z * h
+                    hid_new.append(outputs)
+
+                    outputs = self.dropout_layers[j](outputs)
+
+                else:
+                    r = torch.sigmoid(
+                        self.model_r[j](torch.cat([hidden[j], outputs], 1))
+                    )
+                    z = torch.sigmoid(
+                        self.model_z[j](torch.cat([hidden[j], outputs], 1))
+                    )
+                    h = torch.tanh(
+                        self.model_h[j](torch.cat([r * hidden[j], outputs], 1))
+                    )
+                    outputs = (1 - z) * hidden[j] + z * h
+                    hid_new.append(outputs)
+                    outputs = self.dropout_layers[j](outputs)
+
+                    if j == self.num_layers - 1:
+
+                        logits[seq] = self.linear_layers[j](outputs)
+            hidden = torch.stack(hid_new)
 
     def generate(self, inputs, hidden, generated_seq_len):
         samples = 0
@@ -322,7 +355,7 @@ class MultiHeadedAttention(nn.Module):
         # Create 4 embedding layers. One for each of Q, K, V, and output.
         embedding_layer = nn.Linear(n_units, n_units)
         self.embedding_layers = clones(embedding_layer, 4)
-        
+
         ki = np.sqrt(1 / n_units)
         for l in self.embedding_layers:
             nn.init.uniform_(l.weight, -ki, ki)
