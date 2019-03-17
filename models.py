@@ -205,7 +205,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         # self.tanh = nn.Tanh()
         self.sigm = nn.Sigmoid()
 
-        self.init_weights()
+        self.init_weights_uniform()
 
     def init_weights_uniform(self):
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
