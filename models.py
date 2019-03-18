@@ -167,6 +167,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         dp_keep_prob,
     ):
         super(GRU, self).__init__()
+
         self.emb_size = emb_size
         self.hidden_size = hidden_size
         self.seq_len = seq_len
@@ -192,25 +193,19 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
         self.model_h.extend(clones(rest_layer, self.num_layers - 1))
 
-        self.linear_layers = clones(
-            nn.Linear(hidden_size, hidden_size), num_layers - 1
-        )  # FC Layers
-        self.linear_layers.append(nn.Linear(hidden_size, vocab_size))
+        self.fc = nn.Linear(hidden_size, vocab_size)
 
-        self.dropout_layers = clones(
-            nn.Dropout(p=1 - dp_keep_prob), num_layers
-        )  # Dropout Layers :
-        self.input_emb = nn.Dropout(p=1 - dp_keep_prob)
+        self.dropout = nn.Dropout(p=1 - dp_keep_prob)
 
-        # self.tanh = nn.Tanh()
+        self.tanh = nn.Tanh()
         self.sigm = nn.Sigmoid()
 
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
         torch.nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
-        torch.nn.init.uniform_(self.linear_layers[-1].weight, -0.1, 0.1)
-        torch.nn.init.zeros_(self.linear_layers[-1].bias)
+        torch.nn.init.uniform_(self.fc.weight, -0.1, 0.1)
+        torch.nn.init.zeros_(self.fc.bias)
 
     def init_hidden(self):
         return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(
@@ -218,52 +213,26 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         )
 
     def forward(self, inputs, hidden):
-        emb_inputs = self.embedding(inputs)
-        emb_inputs = self.input_emb(emb_inputs)
-
         logits = torch.zeros(
-            [self.seq_len, self.batch_size, self.vocab_size],
-            dtype=hidden.dtype,
-            device=hidden.device,
-        )
-
+            [self.seq_len, self.batch_size, self.vocab_size], requires_grad=True
+        ).to(device)
         for seq in range(self.seq_len):
-            hid_new = []
+            ts_input = self.dropout(self.embedding(inputs[seq]))
             for j in range(self.num_layers):
-                if j == 0:
-
-                    r = torch.sigmoid(
-                        self.model_r[j](torch.cat([hidden[j], emb_inputs[seq]], 1))
-                    )
-                    z = torch.sigmoid(
-                        self.model_z[j](torch.cat([hidden[j], emb_inputs[seq]], 1))
-                    )
-                    h = torch.tanh(
-                        self.model_h[j](torch.cat([r * hidden[j], emb_inputs[seq]], 1))
-                    )
-                    outputs = (1 - z) * hidden[j] + z * h
-                    hid_new.append(outputs)
-
-                    outputs = self.dropout_layers[j](outputs)
-
-                else:
-                    r = torch.sigmoid(
-                        self.model_r[j](torch.cat([hidden[j], outputs], 1))
-                    )
-                    z = torch.sigmoid(
-                        self.model_z[j](torch.cat([hidden[j], outputs], 1))
-                    )
-                    h = torch.tanh(
-                        self.model_h[j](torch.cat([r * hidden[j], outputs], 1))
-                    )
-                    outputs = (1 - z) * hidden[j] + z * h
-                    hid_new.append(outputs)
-                    outputs = self.dropout_layers[j](outputs)
-
-                    if j == self.num_layers - 1:
-
-                        logits[seq] = self.linear_layers[j](outputs)
-            hidden = torch.stack(hid_new)
+                r = self.sigm(
+                    self.model_r[j](torch.cat([hidden[j].clone(), ts_input], 1))
+                )
+                z = self.sigm(
+                    self.model_z[j](torch.cat([hidden[j].clone(), ts_input], 1))
+                )
+                h = self.tanh(
+                    self.model_h[j](torch.cat([r * hidden[j].clone(), ts_input], 1))
+                )
+                outputs = (1 - z) * hidden[j].clone() + z * h
+                hidden[j] = outputs
+                outputs = self.dropout(outputs)
+                ts_input = outputs
+            logits[seq] = self.fc(outputs)
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
     def generate(self, inputs, hidden, generated_seq_len):
