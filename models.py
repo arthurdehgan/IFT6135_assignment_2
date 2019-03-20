@@ -178,25 +178,19 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
 
         self.embedding = nn.Embedding(vocab_size, emb_size)  # Word Embedding Layer
 
-        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
-        self.model_z = nn.ModuleList([first_layer])
-        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
-        self.model_z.extend(clones(rest_layer, self.num_layers - 1))
-
-        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
-        self.model_r = nn.ModuleList([first_layer])
-        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
-        self.model_r.extend(clones(rest_layer, self.num_layers - 1))
-
-        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
-        self.model_h = nn.ModuleList([first_layer])
-        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
-        self.model_h.extend(clones(rest_layer, self.num_layers - 1))
+        self.model = nn.ModuleDict().to(device)
+        input_size = self.emb_size
+        for i in range(self.num_layers):
+            self.model[f"Wr{i}"] = nn.Linear(input_size, hidden_size)
+            self.model[f"Ur{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
+            self.model[f"Wz{i}"] = nn.Linear(input_size, hidden_size)
+            self.model[f"Uz{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
+            self.model[f"Wh{i}"] = nn.Linear(input_size, hidden_size)
+            self.model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
+            input_size = hidden_size
 
         self.fc = nn.Linear(hidden_size, vocab_size)
-
         self.dropout = nn.Dropout(p=1 - dp_keep_prob)
-
         self.tanh = nn.Tanh()
         self.sigm = nn.Sigmoid()
 
@@ -218,25 +212,52 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         ).to(device)
         for seq in range(self.seq_len):
             ts_input = self.dropout(self.embedding(inputs[seq]))
-            for j in range(self.num_layers):
+            for i in range(self.num_layers):
                 r = self.sigm(
-                    self.model_r[j](torch.cat([hidden[j].clone(), ts_input], 1))
+                    self.model[f"Wr{i}"](ts_input)
+                    + self.model[f"Ur{i}"](hidden[i].clone())
                 )
                 z = self.sigm(
-                    self.model_z[j](torch.cat([hidden[j].clone(), ts_input], 1))
+                    self.model[f"Wz{i}"](ts_input)
+                    + self.model[f"Uz{i}"](hidden[i].clone())
                 )
                 h = self.tanh(
-                    self.model_h[j](torch.cat([r * hidden[j].clone(), ts_input], 1))
+                    self.model[f"Wh{i}"](ts_input)
+                    + self.model[f"Uh{i}"](r * hidden[i].clone())
                 )
-                outputs = (1 - z) * hidden[j].clone() + z * h
-                hidden[j] = outputs
+                outputs = (1 - z) * hidden[i].clone() + z * h
+                hidden[i] = outputs
                 outputs = self.dropout(outputs)
                 ts_input = outputs
             logits[seq] = self.fc(outputs)
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
     def generate(self, inputs, hidden, generated_seq_len):
-        samples = 0
+        """
+        Arguments:
+            - input: A mini-batch of input tokens (NOT sequences!)
+                            shape: (batch_size)
+            - hidden: The initial hidden states for every layer of the stacked RNN.
+                            shape: (num_layers, batch_size, hidden_size)
+            - generated_seq_len: The length of the sequence to generate.
+                           Note that this can be different than the length used
+                           for training (self.seq_len)
+        Returns:
+            - Sampled sequences of tokens
+                        shape: (generated_seq_len, batch_size)
+        """
+        samples = []
+        orig_seq_len = self.seq_len
+        self.seq_len = 1
+        seed = inputs.view(1, *inputs.shape)
+        for i in range(generated_seq_len):
+            samples.append(
+                torch.max(nn.Softmax(2)(self.forward(seed, hidden)[0]), 2)[1]
+            )
+            seed = samples[-1]
+
+        self.seq_len = orig_seq_len
+        samples = torch.stack(samples)
         return samples
 
 
