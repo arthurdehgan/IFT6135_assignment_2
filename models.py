@@ -113,9 +113,11 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                out = self.model[i](torch.cat((hidden[i].clone(), ts_input), 1))
-                hidden[i] = self.dropout(self.tanh(out))
-                ts_input = hidden[i].clone()
+                out = self.tanh(
+                    self.model[i](torch.cat((hidden[i].clone(), ts_input), 1))
+                )
+                hidden[i] = out
+                ts_input = self.dropout(hidden[i].clone())
             logits[ts] = self.fc(ts_input)
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
