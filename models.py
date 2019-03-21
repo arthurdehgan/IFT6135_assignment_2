@@ -58,7 +58,7 @@ class RNN(nn.Module):
         self.dp_keep_prob = dp_keep_prob
 
         # model = nn.ModuleDict().to(device)
-        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
+        # self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
         # input_size = emb_size
         # for i in range(num_layers):
         # model[f"Wx{i}"] = nn.Linear(input_size, hidden_size)
@@ -68,29 +68,35 @@ class RNN(nn.Module):
         # self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
         # self.tanh = nn.Tanh().to(device)
 
-        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
-        self.model_rnn = nn.ModuleList([first_layer])
-        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
+        self.embedding = nn.Embedding(vocab_size, emb_size).to(device)
+        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size).to(
+            device
+        )
+        self.model_rnn = nn.ModuleList([first_layer]).to(device)
+        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size).to(device)
         self.model_rnn.extend(clones(rest_layer, self.num_layers - 1))  # RNN Layer
 
         self.linear_layers = clones(
             nn.Linear(hidden_size, hidden_size), num_layers - 1
+        ).to(
+            device
         )  # FC Layers
         self.linear_layers.append(nn.Linear(hidden_size, vocab_size))
 
-        self.dropout_layers = clones(
-            nn.Dropout(p=1 - dp_keep_prob), num_layers
+        self.dropout_layers = clones(nn.Dropout(p=1 - dp_keep_prob), num_layers).to(
+            device
         )  # Dropout Layers :
-        self.input_emb = nn.Dropout(p=1 - dp_keep_prob)
+        self.input_emb = nn.Dropout(p=1 - dp_keep_prob).to(device)
 
-        self.init_weights()
-        self.model = model
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
-        nn.init.uniform_(self.fc.weight, -0.1, 0.1)
-        nn.init.zeros_(self.fc.bias)
+        torch.nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        # nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
+        # nn.init.uniform_(self.fc.weight, -0.1, 0.1)
+        # nn.init.zeros_(self.fc.bias)
+        torch.nn.init.uniform_(self.linear_layers[-1].weight, -0.1, 0.1)
+        torch.nn.init.zeros_(self.linear_layers[-1].bias)
 
         for layer in self.model_rnn:
             for param in layer.modules():
