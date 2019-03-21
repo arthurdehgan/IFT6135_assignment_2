@@ -49,19 +49,6 @@ class RNN(nn.Module):
         """
         super(RNN, self).__init__()
 
-        model = nn.ModuleList().to(device)
-        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size + hidden_size
-        for i in range(num_layers):
-            model.append(nn.Linear(input_size, hidden_size).to(device))
-            input_size = hidden_size * 2
-        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
-        self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
-        self.tanh = nn.Tanh().to(device)
-
-        self.model = model
-        self.init_weights_uniform()
-
         self.emb_size = emb_size
         self.hidden_size = hidden_size
         self.seq_len = seq_len
@@ -69,6 +56,20 @@ class RNN(nn.Module):
         self.vocab_size = vocab_size
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
+
+        model = nn.ModuleDict().to(device)
+        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
+        input_size = emb_size
+        for i in range(num_layers):
+            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size)
+            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
+            input_size = hidden_size
+        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
+        self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
+        self.tanh = nn.Tanh().to(device)
+
+        self.model = model
+        self.init_weights_uniform()
 
     def init_weights_uniform(self):
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
@@ -114,7 +115,8 @@ class RNN(nn.Module):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
                 out = self.tanh(
-                    self.model[i](torch.cat((hidden[i].clone(), ts_input), 1))
+                    self.model[f"Wx{i}"](ts_input)
+                    + self.model[f"Wh{i}"](hidden[i].clone())
                 )
                 hidden[i] = out
                 ts_input = self.dropout(hidden[i].clone())
