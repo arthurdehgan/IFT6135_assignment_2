@@ -72,7 +72,7 @@ class RNN(nn.Module):
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
 
@@ -111,8 +111,9 @@ class RNN(nn.Module):
         logits = torch.zeros(
             (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
         ).to(device)
+        inputs = self.dropout(self.embedding(inputs))
         for ts in range(timesteps):
-            ts_input = self.dropout(self.embedding(inputs[ts]))
+            ts_input = inputs[ts]
             for i in range(self.num_layers):
                 hidden[i] = self.tanh(
                     self.model[f"Wx{i}"](ts_input)
@@ -179,7 +180,9 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-        self.embedding = nn.WordEmbedding(vocab_size, emb_size)  # Word Embedding Layer
+        self.embedding = WordEmbedding(emb_size, vocab_size).to(
+            device
+        )  # Word Embedding Layer
 
         self.model = nn.ModuleDict().to(device)
         input_size = self.emb_size
@@ -192,15 +195,15 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
             self.model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
             input_size = hidden_size
 
-        self.fc = nn.Linear(hidden_size, vocab_size)
-        self.dropout = nn.Dropout(p=1 - dp_keep_prob)
-        self.tanh = nn.Tanh()
-        self.sigm = nn.Sigmoid()
+        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
+        self.dropout = nn.Dropout(p=1 - dp_keep_prob).to(device)
+        self.tanh = nn.Tanh().to(device)
+        self.sigm = nn.Sigmoid().to(device)
 
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
 
