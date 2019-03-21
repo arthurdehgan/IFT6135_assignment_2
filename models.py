@@ -58,7 +58,7 @@ class RNN(nn.Module):
         self.dp_keep_prob = dp_keep_prob
 
         model = nn.ModuleDict().to(device)
-        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
+        self.embedding = WordEmbedding(vocab_size, emb_size).to(device)
         input_size = emb_size
         for i in range(num_layers):
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size)
@@ -179,7 +179,9 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-        self.embedding = WordEmbedding(vocab_size, emb_size)  # Word Embedding Layer
+        self.embedding = WordEmbedding(vocab_size, emb_size).to(
+            device
+        )  # Word Embedding Layer
 
         self.model = nn.ModuleDict().to(device)
         input_size = self.emb_size
@@ -192,10 +194,10 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
             self.model[f"Uh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
             input_size = hidden_size
 
-        self.fc = nn.Linear(hidden_size, vocab_size)
-        self.dropout = nn.Dropout(p=1 - dp_keep_prob)
-        self.tanh = nn.Tanh()
-        self.sigm = nn.Sigmoid()
+        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
+        self.dropout = nn.Dropout(p=1 - dp_keep_prob).to(device)
+        self.tanh = nn.Tanh().to(device)
+        self.sigm = nn.Sigmoid().to(device)
 
         self.init_weights_uniform()
 
