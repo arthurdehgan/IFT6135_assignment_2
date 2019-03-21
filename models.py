@@ -179,7 +179,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-        self.embedding = nn.Embedding(vocab_size, emb_size)  # Word Embedding Layer
+        self.embedding = nn.WordEmbedding(vocab_size, emb_size)  # Word Embedding Layer
 
         self.model = nn.ModuleDict().to(device)
         input_size = self.emb_size
