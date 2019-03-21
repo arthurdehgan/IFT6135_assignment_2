@@ -58,7 +58,7 @@ class RNN(nn.Module):
         self.dp_keep_prob = dp_keep_prob
 
         model = nn.ModuleDict().to(device)
-        self.embedding = WordEmbedding(vocab_size, emb_size).to(device)
+        self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
         input_size = emb_size
         for i in range(num_layers):
             model[f"Wx{i}"] = nn.Linear(input_size, hidden_size)
@@ -111,8 +111,9 @@ class RNN(nn.Module):
         logits = torch.zeros(
             (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
         ).to(device)
+        inputs = self.dropout(self.embedding(inputs))
         for ts in range(timesteps):
-            ts_input = self.dropout(self.embedding(inputs[ts]))
+            ts_input = inputs[ts]
             for i in range(self.num_layers):
                 hidden[i] = self.tanh(
                     self.model[f"Wx{i}"](ts_input)
@@ -179,7 +180,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-        self.embedding = WordEmbedding(vocab_size, emb_size).to(
+        self.embedding = WordEmbedding(emb_size, vocab_size).to(
             device
         )  # Word Embedding Layer
 
