@@ -72,7 +72,7 @@ class RNN(nn.Module):
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
 
@@ -179,7 +179,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-        self.embedding = nn.WordEmbedding(vocab_size, emb_size)  # Word Embedding Layer
+        self.embedding = WordEmbedding(vocab_size, emb_size)  # Word Embedding Layer
 
         self.model = nn.ModuleDict().to(device)
         input_size = self.emb_size
@@ -200,7 +200,7 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
 
