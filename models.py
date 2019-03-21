@@ -72,9 +72,9 @@ class RNN(nn.Module):
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
+        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
-        nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
 
     def init_hidden(self):
         """
@@ -114,11 +114,10 @@ class RNN(nn.Module):
         for ts in range(timesteps):
             ts_input = self.dropout(self.embedding(inputs[ts]))
             for i in range(self.num_layers):
-                out = self.tanh(
+                hidden[i] = self.tanh(
                     self.model[f"Wx{i}"](ts_input)
                     + self.model[f"Wh{i}"](hidden[i].clone())
                 )
-                hidden[i] = out
                 ts_input = self.dropout(hidden[i].clone())
             logits[ts] = self.fc(ts_input)
 
@@ -201,9 +200,9 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
         self.init_weights_uniform()
 
     def init_weights_uniform(self):
-        torch.nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
-        torch.nn.init.uniform_(self.fc.weight, -0.1, 0.1)
-        torch.nn.init.zeros_(self.fc.bias)
+        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        nn.init.uniform_(self.fc.weight, -0.1, 0.1)
+        nn.init.zeros_(self.fc.bias)
 
     def init_hidden(self):
         return torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(
@@ -229,9 +228,8 @@ class GRU(nn.Module):  # Implement a stacked GRU RNN
                     self.model[f"Wh{i}"](ts_input)
                     + self.model[f"Uh{i}"](r * hidden[i].clone())
                 )
-                outputs = (1 - z) * hidden[i].clone() + z * h
-                hidden[i] = outputs
-                outputs = self.dropout(outputs)
+                hidden[i] = (1 - z) * hidden[i].clone() + z * h
+                outputs = self.dropout(hidden[i])
                 ts_input = outputs
             logits[seq] = self.fc(outputs)
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
