@@ -57,17 +57,33 @@ class RNN(nn.Module):
         self.num_layers = num_layers
         self.dp_keep_prob = dp_keep_prob
 
-        model = nn.ModuleDict().to(device)
+        # model = nn.ModuleDict().to(device)
         self.embedding = WordEmbedding(emb_size, vocab_size).to(device)
-        input_size = emb_size
-        for i in range(num_layers):
-            model[f"Wx{i}"] = nn.Linear(input_size, hidden_size)
-            model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
-            input_size = hidden_size
-        self.fc = nn.Linear(hidden_size, vocab_size).to(device)
-        self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
-        self.tanh = nn.Tanh().to(device)
+        # input_size = emb_size
+        # for i in range(num_layers):
+        # model[f"Wx{i}"] = nn.Linear(input_size, hidden_size)
+        # model[f"Wh{i}"] = nn.Linear(hidden_size, hidden_size, bias=False)
+        # input_size = hidden_size
+        # self.fc = nn.Linear(hidden_size, vocab_size).to(device)
+        # self.dropout = nn.Dropout(1 - dp_keep_prob).to(device)
+        # self.tanh = nn.Tanh().to(device)
 
+        first_layer = nn.Linear(self.emb_size + self.hidden_size, self.hidden_size)
+        self.model_rnn = nn.ModuleList([first_layer])
+        rest_layer = nn.Linear(2 * self.hidden_size, self.hidden_size)
+        self.model_rnn.extend(clones(rest_layer, self.num_layers - 1))  # RNN Layer
+
+        self.linear_layers = clones(
+            nn.Linear(hidden_size, hidden_size), num_layers - 1
+        )  # FC Layers
+        self.linear_layers.append(nn.Linear(hidden_size, vocab_size))
+
+        self.dropout_layers = clones(
+            nn.Dropout(p=1 - dp_keep_prob), num_layers
+        )  # Dropout Layers :
+        self.input_emb = nn.Dropout(p=1 - dp_keep_prob)
+
+        self.init_weights()
         self.model = model
         self.init_weights_uniform()
 
@@ -75,6 +91,21 @@ class RNN(nn.Module):
         nn.init.uniform_(self.embedding.lut.weight, -0.1, 0.1)
         nn.init.uniform_(self.fc.weight, -0.1, 0.1)
         nn.init.zeros_(self.fc.bias)
+
+        for layer in self.model_rnn:
+            for param in layer.modules():
+                if type(param) == nn.Linear:
+                    torch.nn.init.uniform_(
+                        param.weight,
+                        -math.sqrt(1 / self.hidden_size),
+                        math.sqrt(1 / self.hidden_size),
+                    )
+                    if param.bias is not None:
+                        torch.nn.init.uniform_(
+                            param.bias,
+                            -math.sqrt(1 / self.hidden_size),
+                            math.sqrt(1 / self.hidden_size),
+                        )
 
     def init_hidden(self):
         """
@@ -107,20 +138,47 @@ class RNN(nn.Module):
                   if you are curious.
                         shape: (num_layers, batch_size, hidden_size)
         """
-        timesteps = len(inputs)
+        # timesteps = len(inputs)
+        # logits = torch.zeros(
+        # (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
+        # ).to(device)
+        # inputs = self.dropout(self.embedding(inputs))
+        # for ts in range(timesteps):
+        # ts_input = inputs[ts]
+        # for i in range(self.num_layers):
+        # hidden[i] = self.tanh(
+        # self.model[f"Wx{i}"](ts_input)
+        # + self.model[f"Wh{i}"](hidden[i].clone())
+        # )
+        # ts_input = self.dropout(hidden[i].clone())
+        # logits[ts] = self.fc(ts_input)
+
+        emb_inputs = self.embedding(inputs)
+        emb_inputs = self.input_emb(emb_inputs)
+
         logits = torch.zeros(
-            (self.seq_len, self.batch_size, self.vocab_size), requires_grad=True
-        ).to(device)
-        inputs = self.dropout(self.embedding(inputs))
-        for ts in range(timesteps):
-            ts_input = inputs[ts]
-            for i in range(self.num_layers):
-                hidden[i] = self.tanh(
-                    self.model[f"Wx{i}"](ts_input)
-                    + self.model[f"Wh{i}"](hidden[i].clone())
-                )
-                ts_input = self.dropout(hidden[i].clone())
-            logits[ts] = self.fc(ts_input)
+            [self.seq_len, self.batch_size, self.vocab_size],
+            dtype=hidden.dtype,
+            device=hidden.device,
+        )
+
+        for seq in range(self.seq_len):
+            for j in range(self.num_layers):
+                if j == 0:
+
+                    hidden[j] = torch.tanh(
+                        self.model_rnn[j](torch.cat([hidden[j], emb_inputs[seq]], 1))
+                    )
+                    outputs = self.dropout_layers[j](hidden[j])
+                else:
+
+                    hidden[j] = torch.tanh(
+                        self.model_rnn[j](torch.cat([hidden[j], outputs], 1))
+                    )
+                    outputs = self.dropout_layers[j](hidden[j])
+                    if j == self.num_layers - 1:
+
+                        logits[seq] = self.linear_layers[j](outputs)
 
         return logits.view(self.seq_len, self.batch_size, self.vocab_size), hidden
 
