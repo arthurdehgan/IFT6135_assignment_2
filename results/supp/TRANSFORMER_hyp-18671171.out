@@ -1,0 +1,534 @@
+Using the GPU
+
+########## Setting Up Experiment ######################
+
+Putting log in TRANSFORMER_ADAM_model=TRANSFORMER_optimizer=ADAM_initial_lr=0.0001_batch_size=20_seq_len=35_hidden_size=512_num_layers=6_dp_keep_prob=0.9_0
+Using the GPU
+Loading data from data
+  vocabulary size: 10000
+
+########## Running Main Loop ##########################
+
+EPOCH 0 ------------------
+step: 10	loss (sum over all examples' seen this epoch):3312.566738128662	speed (wps):6891.964993170164
+step: 142	loss (sum over all examples' seen this epoch):34798.434188365936	speed (wps):11351.340540191548
+step: 274	loss (sum over all examples' seen this epoch):64054.65803384781	speed (wps):11757.793024397139
+step: 406	loss (sum over all examples' seen this epoch):92093.53510856628	speed (wps):11964.929202280418
+step: 538	loss (sum over all examples' seen this epoch):119613.80303382874	speed (wps):12017.867177639318
+step: 670	loss (sum over all examples' seen this epoch):146632.22127199173	speed (wps):12028.171966277458
+step: 802	loss (sum over all examples' seen this epoch):172905.32382011414	speed (wps):11993.440684715562
+step: 934	loss (sum over all examples' seen this epoch):198964.4883275032	speed (wps):12020.141429976375
+step: 1066	loss (sum over all examples' seen this epoch):224773.1845355034	speed (wps):12040.121604270667
+step: 1198	loss (sum over all examples' seen this epoch):250153.95993471146	speed (wps):12040.619676317869
+epoch: 0	train ppl: 369.73644198277236	val ppl: 225.9693315378511	best val: 225.9693315378511	time (s) spent in epoch: 78.41138672828674
+
+EPOCH 1 ------------------
+step: 10	loss (sum over all examples' seen this epoch):2146.423809528351	speed (wps):10830.562200174718
+step: 142	loss (sum over all examples' seen this epoch):26799.305613040924	speed (wps):12339.959765572119
+step: 274	loss (sum over all examples' seen this epoch):51789.399473667145	speed (wps):12396.482491165625
+step: 406	loss (sum over all examples' seen this epoch):76249.95978593826	speed (wps):12415.749727425571
+step: 538	loss (sum over all examples' seen this epoch):100762.96759366989	speed (wps):12418.533308729242
+step: 670	loss (sum over all examples' seen this epoch):125111.27817392349	speed (wps):12427.597197813799
+step: 802	loss (sum over all examples' seen this epoch):148939.28824424744	speed (wps):12432.737995108819
+step: 934	loss (sum over all examples' seen this epoch):172804.67058181763	speed (wps):12419.359434730422
+step: 1066	loss (sum over all examples' seen this epoch):196556.76916837692	speed (wps):12405.119236802228
+step: 1198	loss (sum over all examples' seen this epoch):219942.17289686203	speed (wps):12411.276147183615
+epoch: 1	train ppl: 185.63268074911153	val ppl: 171.45305433431815	best val: 171.45305433431815	time (s) spent in epoch: 76.2051055431366
+
+EPOCH 2 ------------------
+step: 10	loss (sum over all examples' seen this epoch):2008.5021114349365	speed (wps):10925.593164835818
+step: 142	loss (sum over all examples' seen this epoch):24939.384405612946	speed (wps):12385.429360249615
+step: 274	loss (sum over all examples' seen this epoch):48374.76195812225	speed (wps):12433.414497171827
+step: 406	loss (sum over all examples' seen this epoch):71287.76588916779	speed (wps):12455.597302352482
+step: 538	loss (sum over all examples' seen this epoch):94332.69156455994	speed (wps):12468.029468183628
+step: 670	loss (sum over all examples' seen this epoch):117279.2731666565	speed (wps):12428.26767652725
+step: 802	loss (sum over all examples' seen this epoch):139747.8253030777	speed (wps):12422.392151435837
+step: 934	loss (sum over all examples' seen this epoch):162359.4751405716	speed (wps):12429.109245741683
+step: 1066	loss (sum over all examples' seen this epoch):184872.90590763092	speed (wps):12442.423412808565
+step: 1198	loss (sum over all examples' seen this epoch):206971.95671319962	speed (wps):12430.46667027451
+epoch: 2	train ppl: 137.01241870042043	val ppl: 147.8738503970161	best val: 147.8738503970161	time (s) spent in epoch: 76.1006236076355
+
+EPOCH 3 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1909.1569805145264	speed (wps):10966.055425603401
+step: 142	loss (sum over all examples' seen this epoch):23622.207362651825	speed (wps):12425.767379122997
+step: 274	loss (sum over all examples' seen this epoch):45945.98056793213	speed (wps):12497.510763345217
+step: 406	loss (sum over all examples' seen this epoch):67727.90380477905	speed (wps):12489.858390245228
+step: 538	loss (sum over all examples' seen this epoch):89647.85563468933	speed (wps):12498.057082407468
+step: 670	loss (sum over all examples' seen this epoch):111496.66236162186	speed (wps):12511.89163151782
+step: 802	loss (sum over all examples' seen this epoch):132906.42292499542	speed (wps):12516.601401682849
+step: 934	loss (sum over all examples' seen this epoch):154522.18591690063	speed (wps):12523.764032449033
+step: 1066	loss (sum over all examples' seen this epoch):176046.15560293198	speed (wps):12523.856658548473
+step: 1198	loss (sum over all examples' seen this epoch):197111.29849910736	speed (wps):12527.102556595111
+epoch: 3	train ppl: 108.56380239508894	val ppl: 134.76823176405975	best val: 134.76823176405975	time (s) spent in epoch: 75.54566884040833
+
+EPOCH 4 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1825.0639510154724	speed (wps):10965.753831172404
+step: 142	loss (sum over all examples' seen this epoch):22537.23920583725	speed (wps):12423.101029781841
+step: 274	loss (sum over all examples' seen this epoch):43948.24619293213	speed (wps):12481.189527304292
+step: 406	loss (sum over all examples' seen this epoch):64759.27566289902	speed (wps):12492.243785698976
+step: 538	loss (sum over all examples' seen this epoch):85747.16705799103	speed (wps):12510.329145955397
+step: 670	loss (sum over all examples' seen this epoch):106669.54423666	speed (wps):12522.08351994016
+step: 802	loss (sum over all examples' seen this epoch):127160.35756587982	speed (wps):12531.070730765709
+step: 934	loss (sum over all examples' seen this epoch):147901.58802509308	speed (wps):12526.765467739264
+step: 1066	loss (sum over all examples' seen this epoch):168569.7102355957	speed (wps):12530.009441206994
+step: 1198	loss (sum over all examples' seen this epoch):188735.87779164314	speed (wps):12531.774729250154
+epoch: 4	train ppl: 89.06986295791437	val ppl: 127.62001960578678	best val: 127.62001960578678	time (s) spent in epoch: 75.52488470077515
+
+EPOCH 5 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1750.2110195159912	speed (wps):10994.206348125655
+step: 142	loss (sum over all examples' seen this epoch):21583.95126581192	speed (wps):12423.322324108203
+step: 274	loss (sum over all examples' seen this epoch):42188.34755182266	speed (wps):12485.656905138942
+step: 406	loss (sum over all examples' seen this epoch):62172.412967681885	speed (wps):12510.77244453009
+step: 538	loss (sum over all examples' seen this epoch):82326.97229743004	speed (wps):12523.335079571458
+step: 670	loss (sum over all examples' seen this epoch):102435.57238936424	speed (wps):12529.728597295298
+step: 802	loss (sum over all examples' seen this epoch):122123.53379845619	speed (wps):12534.25962792847
+step: 934	loss (sum over all examples' seen this epoch):142093.73549580574	speed (wps):12538.57342043215
+step: 1066	loss (sum over all examples' seen this epoch):161978.95208716393	speed (wps):12542.166951213556
+step: 1198	loss (sum over all examples' seen this epoch):181343.26630234718	speed (wps):12544.778712589761
+epoch: 5	train ppl: 74.7357041433951	val ppl: 124.19846193222479	best val: 124.19846193222479	time (s) spent in epoch: 75.44296026229858
+
+EPOCH 6 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1688.527581691742	speed (wps):10942.736492152646
+step: 142	loss (sum over all examples' seen this epoch):20763.96969795227	speed (wps):12405.575109368405
+step: 274	loss (sum over all examples' seen this epoch):40639.32864546776	speed (wps):12468.07879216994
+step: 406	loss (sum over all examples' seen this epoch):59848.48138213158	speed (wps):12496.313033163307
+step: 538	loss (sum over all examples' seen this epoch):79258.42903494835	speed (wps):12507.071182211203
+step: 670	loss (sum over all examples' seen this epoch):98619.84453558922	speed (wps):12514.315487035028
+step: 802	loss (sum over all examples' seen this epoch):117567.21049785614	speed (wps):12519.440286375622
+step: 934	loss (sum over all examples' seen this epoch):136819.4974577427	speed (wps):12524.576598194632
+step: 1066	loss (sum over all examples' seen this epoch):156007.3221361637	speed (wps):12529.441096155017
+step: 1198	loss (sum over all examples' seen this epoch):174636.13329410553	speed (wps):12530.789291365203
+epoch: 6	train ppl: 63.753767499080595	val ppl: 123.32886432447785	best val: 123.32886432447785	time (s) spent in epoch: 75.5305483341217
+
+EPOCH 7 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1625.3541731834412	speed (wps):10969.638593829979
+step: 142	loss (sum over all examples' seen this epoch):19967.928372621536	speed (wps):12404.238791723543
+step: 274	loss (sum over all examples' seen this epoch):39132.90276169777	speed (wps):12487.64379790125
+step: 406	loss (sum over all examples' seen this epoch):57638.458478450775	speed (wps):12520.768031085978
+step: 538	loss (sum over all examples' seen this epoch):76345.95504045486	speed (wps):12539.44141574889
+step: 670	loss (sum over all examples' seen this epoch):95014.43784236908	speed (wps):12539.270187354678
+step: 802	loss (sum over all examples' seen this epoch):113280.43583154678	speed (wps):12545.651192764974
+step: 934	loss (sum over all examples' seen this epoch):131857.47162222862	speed (wps):12546.175169729633
+step: 1066	loss (sum over all examples' seen this epoch):150378.0689048767	speed (wps):12551.63471773521
+step: 1198	loss (sum over all examples' seen this epoch):168330.31764864922	speed (wps):12555.182459171263
+epoch: 7	train ppl: 54.87557301203563	val ppl: 124.37124362413499	best val: 123.32886432447785	time (s) spent in epoch: 75.37790250778198
+
+EPOCH 8 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1574.0175008773804	speed (wps):10979.222584953812
+step: 142	loss (sum over all examples' seen this epoch):19253.78032684326	speed (wps):12437.894352657477
+step: 274	loss (sum over all examples' seen this epoch):37781.49981856346	speed (wps):12510.964013145225
+step: 406	loss (sum over all examples' seen this epoch):55622.15693950653	speed (wps):12539.051726227546
+step: 538	loss (sum over all examples' seen this epoch):73644.0611410141	speed (wps):12554.15134763345
+step: 670	loss (sum over all examples' seen this epoch):91643.0456340313	speed (wps):12562.359637291038
+step: 802	loss (sum over all examples' seen this epoch):109246.06123447418	speed (wps):12565.599818062441
+step: 934	loss (sum over all examples' seen this epoch):127191.28058671951	speed (wps):12567.919998026982
+step: 1066	loss (sum over all examples' seen this epoch):145074.0029978752	speed (wps):12571.85418823275
+step: 1198	loss (sum over all examples' seen this epoch):162358.8984835148	speed (wps):12570.575716569781
+epoch: 8	train ppl: 47.61817373683412	val ppl: 126.35420993744576	best val: 123.32886432447785	time (s) spent in epoch: 75.2440538406372
+
+EPOCH 9 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1518.2856929302216	speed (wps):10720.731991499402
+step: 142	loss (sum over all examples' seen this epoch):18575.590463876724	speed (wps):12474.956641448534
+step: 274	loss (sum over all examples' seen this epoch):36460.6131029129	speed (wps):12563.584116929143
+step: 406	loss (sum over all examples' seen this epoch):53651.55851602554	speed (wps):12593.82123740611
+step: 538	loss (sum over all examples' seen this epoch):71043.00358653069	speed (wps):12609.869347274549
+step: 670	loss (sum over all examples' seen this epoch):88420.86111307144	speed (wps):12614.386249934818
+step: 802	loss (sum over all examples' seen this epoch):105396.03469848633	speed (wps):12622.737331374847
+step: 934	loss (sum over all examples' seen this epoch):122728.29735636711	speed (wps):12630.585483950343
+step: 1066	loss (sum over all examples' seen this epoch):139979.1630911827	speed (wps):12634.726116937423
+step: 1198	loss (sum over all examples' seen this epoch):156627.36822009087	speed (wps):12635.848406216694
+epoch: 9	train ppl: 41.553830466868554	val ppl: 130.04593721910584	best val: 123.32886432447785	time (s) spent in epoch: 74.90125370025635
+
+EPOCH 10 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1466.505811214447	speed (wps):11014.419973746397
+step: 142	loss (sum over all examples' seen this epoch):17906.90951347351	speed (wps):12507.408237560836
+step: 274	loss (sum over all examples' seen this epoch):35159.45093750954	speed (wps):12574.413329629862
+step: 406	loss (sum over all examples' seen this epoch):51727.49669671059	speed (wps):12598.231741648773
+step: 538	loss (sum over all examples' seen this epoch):68477.5404214859	speed (wps):12608.524883260405
+step: 670	loss (sum over all examples' seen this epoch):85200.18502116203	speed (wps):12617.390571053918
+step: 802	loss (sum over all examples' seen this epoch):101569.4982779026	speed (wps):12622.285153745936
+step: 934	loss (sum over all examples' seen this epoch):118285.74742078781	speed (wps):12627.817154498058
+step: 1066	loss (sum over all examples' seen this epoch):134928.2207262516	speed (wps):12629.749567465764
+step: 1198	loss (sum over all examples' seen this epoch):150985.59745430946	speed (wps):12633.536914041955
+epoch: 10	train ppl: 36.3316883647546	val ppl: 136.0521375463291	best val: 123.32886432447785	time (s) spent in epoch: 74.90385365486145
+
+EPOCH 11 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1402.87109375	speed (wps):10725.036255286364
+step: 142	loss (sum over all examples' seen this epoch):17241.48686528206	speed (wps):12490.629581535626
+step: 274	loss (sum over all examples' seen this epoch):33887.28514671326	speed (wps):12575.64935018411
+step: 406	loss (sum over all examples' seen this epoch):49832.54015803337	speed (wps):12606.810512536365
+step: 538	loss (sum over all examples' seen this epoch):65992.08709001541	speed (wps):12621.441752555153
+step: 670	loss (sum over all examples' seen this epoch):82107.92920827866	speed (wps):12631.900619055046
+step: 802	loss (sum over all examples' seen this epoch):97877.9225063324	speed (wps):12638.998167091428
+step: 934	loss (sum over all examples' seen this epoch):114008.90247941017	speed (wps):12644.073848335669
+step: 1066	loss (sum over all examples' seen this epoch):130041.48686766624	speed (wps):12639.679306038026
+step: 1198	loss (sum over all examples' seen this epoch):145503.46392035484	speed (wps):12621.375449949493
+epoch: 11	train ppl: 31.876664502555176	val ppl: 141.9066576014841	best val: 123.32886432447785	time (s) spent in epoch: 75.13738560676575
+
+EPOCH 12 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1354.379404783249	speed (wps):10313.65259658868
+step: 142	loss (sum over all examples' seen this epoch):16601.88146352768	speed (wps):12332.276649044295
+step: 274	loss (sum over all examples' seen this epoch):32652.59652376175	speed (wps):12357.531552050525
+step: 406	loss (sum over all examples' seen this epoch):48009.97724890709	speed (wps):12416.823625786637
+step: 538	loss (sum over all examples' seen this epoch):63560.078756809235	speed (wps):12474.258661293065
+step: 670	loss (sum over all examples' seen this epoch):79080.37045359612	speed (wps):12508.936302552676
+step: 802	loss (sum over all examples' seen this epoch):94256.54250860214	speed (wps):12531.86530494569
+step: 934	loss (sum over all examples' seen this epoch):109802.46700167656	speed (wps):12548.620540906471
+step: 1066	loss (sum over all examples' seen this epoch):125283.11319828033	speed (wps):12561.502601475226
+step: 1198	loss (sum over all examples' seen this epoch):140147.55244255066	speed (wps):12572.309766530234
+epoch: 12	train ppl: 28.05901742952309	val ppl: 150.0530193753697	best val: 123.32886432447785	time (s) spent in epoch: 75.23620843887329
+
+EPOCH 13 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1308.4448337554932	speed (wps):11032.98909482467
+step: 142	loss (sum over all examples' seen this epoch):15979.391849040985	speed (wps):12513.478570215948
+step: 274	loss (sum over all examples' seen this epoch):31433.661348819733	speed (wps):12583.20216537357
+step: 406	loss (sum over all examples' seen this epoch):46183.62958192825	speed (wps):12607.052447775366
+step: 538	loss (sum over all examples' seen this epoch):61124.42976951599	speed (wps):12612.576023322577
+step: 670	loss (sum over all examples' seen this epoch):76051.85944914818	speed (wps):12615.339896382147
+step: 802	loss (sum over all examples' seen this epoch):90639.83367919922	speed (wps):12621.922475421197
+step: 934	loss (sum over all examples' seen this epoch):105607.88035988808	speed (wps):12626.798313713698
+step: 1066	loss (sum over all examples' seen this epoch):120483.0737221241	speed (wps):12627.336996933405
+step: 1198	loss (sum over all examples' seen this epoch):134766.40528202057	speed (wps):12626.532600700093
+epoch: 13	train ppl: 24.689144577467665	val ppl: 157.95805297518052	best val: 123.32886432447785	time (s) spent in epoch: 75.08591818809509
+
+EPOCH 14 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1258.1582355499268	speed (wps):10944.1270456611
+step: 142	loss (sum over all examples' seen this epoch):15341.030017137527	speed (wps):12389.034745229437
+step: 274	loss (sum over all examples' seen this epoch):30193.666446208954	speed (wps):12453.26663692641
+step: 406	loss (sum over all examples' seen this epoch):44351.677272319794	speed (wps):12453.30245165012
+step: 538	loss (sum over all examples' seen this epoch):58714.211345911026	speed (wps):12462.682981147425
+step: 670	loss (sum over all examples' seen this epoch):73066.71553373337	speed (wps):12473.761093163062
+step: 802	loss (sum over all examples' seen this epoch):87087.30734348297	speed (wps):12464.966166121827
+step: 934	loss (sum over all examples' seen this epoch):101463.71434807777	speed (wps):12459.537771209842
+step: 1066	loss (sum over all examples' seen this epoch):115764.42542791367	speed (wps):12471.255508633483
+step: 1198	loss (sum over all examples' seen this epoch):129466.38356804848	speed (wps):12472.496464691005
+epoch: 14	train ppl: 21.760831635245356	val ppl: 168.9341071819584	best val: 123.32886432447785	time (s) spent in epoch: 75.90625262260437
+
+EPOCH 15 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1210.1602578163147	speed (wps):10925.467500123475
+step: 142	loss (sum over all examples' seen this epoch):14739.629236459732	speed (wps):12411.612283720142
+step: 274	loss (sum over all examples' seen this epoch):29036.12119436264	speed (wps):12446.132559212132
+step: 406	loss (sum over all examples' seen this epoch):42623.51147532463	speed (wps):12439.61596374889
+step: 538	loss (sum over all examples' seen this epoch):56415.008964538574	speed (wps):12466.628162841544
+step: 670	loss (sum over all examples' seen this epoch):70217.66456127167	speed (wps):12483.632886237703
+step: 802	loss (sum over all examples' seen this epoch):83679.6741437912	speed (wps):12489.337135742653
+step: 934	loss (sum over all examples' seen this epoch):97489.55402135849	speed (wps):12497.982148490719
+step: 1066	loss (sum over all examples' seen this epoch):111240.57049393654	speed (wps):12492.685108058908
+step: 1198	loss (sum over all examples' seen this epoch):124371.16716742516	speed (wps):12499.50209130967
+epoch: 15	train ppl: 19.26513128426502	val ppl: 181.28136247885286	best val: 123.32886432447785	time (s) spent in epoch: 75.70130801200867
+
+EPOCH 16 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1160.738674402237	speed (wps):10962.359245835332
+step: 142	loss (sum over all examples' seen this epoch):14157.2902572155	speed (wps):12416.51543609934
+step: 274	loss (sum over all examples' seen this epoch):27844.929953813553	speed (wps):12481.89977829497
+step: 406	loss (sum over all examples' seen this epoch):40883.68425488472	speed (wps):12495.057840491434
+step: 538	loss (sum over all examples' seen this epoch):54081.82980418205	speed (wps):12501.404367680163
+step: 670	loss (sum over all examples' seen this epoch):67326.15147709846	speed (wps):12511.491388705372
+step: 802	loss (sum over all examples' seen this epoch):80229.05215978622	speed (wps):12518.356410528882
+step: 934	loss (sum over all examples' seen this epoch):93493.91088485718	speed (wps):12523.573376749804
+step: 1066	loss (sum over all examples' seen this epoch):106677.48975396156	speed (wps):12526.956388598464
+step: 1198	loss (sum over all examples' seen this epoch):119253.46057415009	speed (wps):12524.142049344398
+epoch: 16	train ppl: 17.063850319159723	val ppl: 195.49521992898363	best val: 123.32886432447785	time (s) spent in epoch: 75.48149371147156
+
+EPOCH 17 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1105.9071123600006	speed (wps):11034.35744178681
+step: 142	loss (sum over all examples' seen this epoch):13577.75624036789	speed (wps):12466.372711350014
+step: 274	loss (sum over all examples' seen this epoch):26720.084023475647	speed (wps):12556.595723609787
+step: 406	loss (sum over all examples' seen this epoch):39186.395399570465	speed (wps):12588.078325849094
+step: 538	loss (sum over all examples' seen this epoch):51826.58622264862	speed (wps):12605.964644149093
+step: 670	loss (sum over all examples' seen this epoch):64504.41139340401	speed (wps):12614.141359089344
+step: 802	loss (sum over all examples' seen this epoch):76846.23745203018	speed (wps):12620.862941601312
+step: 934	loss (sum over all examples' seen this epoch):89576.807513237	speed (wps):12623.323317848084
+step: 1066	loss (sum over all examples' seen this epoch):102206.03100419044	speed (wps):12624.39251869966
+step: 1198	loss (sum over all examples' seen this epoch):114274.14214491844	speed (wps):12628.750738911633
+epoch: 17	train ppl: 15.152138706173211	val ppl: 212.61529278696446	best val: 123.32886432447785	time (s) spent in epoch: 74.92965340614319
+
+EPOCH 18 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1064.2720305919647	speed (wps):11013.353257494664
+step: 142	loss (sum over all examples' seen this epoch):12995.64169883728	speed (wps):12512.303856854774
+step: 274	loss (sum over all examples' seen this epoch):25637.948291301727	speed (wps):12593.886476232356
+step: 406	loss (sum over all examples' seen this epoch):37581.51188015938	speed (wps):12624.73630233884
+step: 538	loss (sum over all examples' seen this epoch):49702.55188584328	speed (wps):12637.644354844275
+step: 670	loss (sum over all examples' seen this epoch):61858.17929029465	speed (wps):12646.409008446644
+step: 802	loss (sum over all examples' seen this epoch):73689.5590531826	speed (wps):12649.383893505976
+step: 934	loss (sum over all examples' seen this epoch):85875.65318465233	speed (wps):12652.850831122922
+step: 1066	loss (sum over all examples' seen this epoch):97990.82625031471	speed (wps):12655.406315242859
+step: 1198	loss (sum over all examples' seen this epoch):109503.20517897606	speed (wps):12653.944714363659
+epoch: 18	train ppl: 13.525685344992054	val ppl: 231.82379290785664	best val: 123.32886432447785	time (s) spent in epoch: 74.79230546951294
+
+EPOCH 19 ------------------
+step: 10	loss (sum over all examples' seen this epoch):1020.0988817214966	speed (wps):11032.288089853864
+step: 142	loss (sum over all examples' seen this epoch):12451.990036964417	speed (wps):12529.35769505802
+step: 274	loss (sum over all examples' seen this epoch):24510.633112192154	speed (wps):12597.93698681067
+step: 406	loss (sum over all examples' seen this epoch):35911.74872159958	speed (wps):12621.401204414196
+step: 538	loss (sum over all examples' seen this epoch):47513.64308357239	speed (wps):12634.379163178897
+step: 670	loss (sum over all examples' seen this epoch):59157.86807894707	speed (wps):12642.849983333163
+step: 802	loss (sum over all examples' seen this epoch):70501.07633829117	speed (wps):12648.929804805017
+step: 934	loss (sum over all examples' seen this epoch):82187.78116106987	speed (wps):12652.92075553181
+step: 1066	loss (sum over all examples' seen this epoch):93826.8372797966	speed (wps):12656.998228390303
+step: 1198	loss (sum over all examples' seen this epoch):104850.12900471687	speed (wps):12659.335699197
+epoch: 19	train ppl: 12.102507675287832	val ppl: 251.54178216441557	best val: 123.32886432447785	time (s) spent in epoch: 74.76549077033997
+
+EPOCH 20 ------------------
+step: 10	loss (sum over all examples' seen this epoch):975.6777381896973	speed (wps):11024.778607598653
+step: 142	loss (sum over all examples' seen this epoch):11926.647292971611	speed (wps):12526.975238648896
+step: 274	loss (sum over all examples' seen this epoch):23495.222743153572	speed (wps):12595.80539356463
+step: 406	loss (sum over all examples' seen this epoch):34425.85018515587	speed (wps):12616.590547012029
+step: 538	loss (sum over all examples' seen this epoch):45536.48795127869	speed (wps):12631.841486543502
+step: 670	loss (sum over all examples' seen this epoch):56682.86882519722	speed (wps):12638.6218990562
+step: 802	loss (sum over all examples' seen this epoch):67500.91002464294	speed (wps):12642.163397569015
+step: 934	loss (sum over all examples' seen this epoch):78672.54916191101	speed (wps):12644.175823435833
+step: 1066	loss (sum over all examples' seen this epoch):89821.46640896797	speed (wps):12646.942731093857
+step: 1198	loss (sum over all examples' seen this epoch):100335.79325556755	speed (wps):12649.98033281793
+epoch: 20	train ppl: 10.8701300423123	val ppl: 275.0342161174818	best val: 123.32886432447785	time (s) spent in epoch: 74.81170558929443
+
+EPOCH 21 ------------------
+step: 10	loss (sum over all examples' seen this epoch):934.4787895679474	speed (wps):10448.734840244666
+step: 142	loss (sum over all examples' seen this epoch):11406.124539971352	speed (wps):12470.133162126469
+step: 274	loss (sum over all examples' seen this epoch):22478.484619259834	speed (wps):12567.010716528479
+step: 406	loss (sum over all examples' seen this epoch):32914.77656066418	speed (wps):12602.526246280764
+step: 538	loss (sum over all examples' seen this epoch):43507.333193421364	speed (wps):12609.526422437213
+step: 670	loss (sum over all examples' seen this epoch):54174.70701754093	speed (wps):12622.469750634305
+step: 802	loss (sum over all examples' seen this epoch):64548.693014383316	speed (wps):12632.318049897269
+step: 934	loss (sum over all examples' seen this epoch):75250.31951665878	speed (wps):12639.081817591821
+step: 1066	loss (sum over all examples' seen this epoch):85881.51347398758	speed (wps):12643.693122488236
+step: 1198	loss (sum over all examples' seen this epoch):95942.76069998741	speed (wps):12647.331824322195
+epoch: 21	train ppl: 9.799228511769755	val ppl: 300.7169714030841	best val: 123.32886432447785	time (s) spent in epoch: 74.84402370452881
+
+EPOCH 22 ------------------
+step: 10	loss (sum over all examples' seen this epoch):894.6967041492462	speed (wps):11028.486878117927
+step: 142	loss (sum over all examples' seen this epoch):10914.095363020897	speed (wps):12538.191115616653
+step: 274	loss (sum over all examples' seen this epoch):21525.621129870415	speed (wps):12605.580369615425
+step: 406	loss (sum over all examples' seen this epoch):31532.778866887093	speed (wps):12629.004319538355
+step: 538	loss (sum over all examples' seen this epoch):41661.900101304054	speed (wps):12641.054922437217
+step: 670	loss (sum over all examples' seen this epoch):51860.207978487015	speed (wps):12645.527120406126
+step: 802	loss (sum over all examples' seen this epoch):61765.39604604244	speed (wps):12647.469354667235
+step: 934	loss (sum over all examples' seen this epoch):71986.0525906086	speed (wps):12650.760337492662
+step: 1066	loss (sum over all examples' seen this epoch):82168.99658977985	speed (wps):12654.117544507324
+step: 1198	loss (sum over all examples' seen this epoch):91813.70497226715	speed (wps):12644.459876405686
+epoch: 22	train ppl: 8.878117236852793	val ppl: 330.5633862179012	best val: 123.32886432447785	time (s) spent in epoch: 74.95075678825378
+
+EPOCH 23 ------------------
+step: 10	loss (sum over all examples' seen this epoch):853.4578597545624	speed (wps):10707.296750891994
+step: 142	loss (sum over all examples' seen this epoch):10454.776163697243	speed (wps):12282.747061698617
+step: 274	loss (sum over all examples' seen this epoch):20602.776873111725	speed (wps):12409.599977965909
+step: 406	loss (sum over all examples' seen this epoch):30139.006729722023	speed (wps):12439.510812617396
+step: 538	loss (sum over all examples' seen this epoch):39793.40769469738	speed (wps):12469.68026360431
+step: 670	loss (sum over all examples' seen this epoch):49537.46428310871	speed (wps):12480.847366255664
+step: 802	loss (sum over all examples' seen this epoch):59050.92942893505	speed (wps):12500.816109367592
+step: 934	loss (sum over all examples' seen this epoch):68851.79623365402	speed (wps):12522.619157083278
+step: 1066	loss (sum over all examples' seen this epoch):78584.38001275063	speed (wps):12539.648081923888
+step: 1198	loss (sum over all examples' seen this epoch):87772.63572096825	speed (wps):12549.093978474979
+epoch: 23	train ppl: 8.06547166238482	val ppl: 362.10471780694587	best val: 123.32886432447785	time (s) spent in epoch: 75.35569024085999
+
+EPOCH 24 ------------------
+step: 10	loss (sum over all examples' seen this epoch):816.0101026296616	speed (wps):11014.528910625004
+step: 142	loss (sum over all examples' seen this epoch):9985.00361263752	speed (wps):12518.087440597947
+step: 274	loss (sum over all examples' seen this epoch):19699.6182346344	speed (wps):12586.362232460491
+step: 406	loss (sum over all examples' seen this epoch):28828.356901407242	speed (wps):12610.701089646858
+step: 538	loss (sum over all examples' seen this epoch):38107.06280648708	speed (wps):12624.547476511543
+step: 670	loss (sum over all examples' seen this epoch):47399.73148107529	speed (wps):12631.892438589342
+step: 802	loss (sum over all examples' seen this epoch):56484.37475442886	speed (wps):12635.548331463215
+step: 934	loss (sum over all examples' seen this epoch):65848.54550361633	speed (wps):12634.727315940814
+step: 1066	loss (sum over all examples' seen this epoch):75166.57997488976	speed (wps):12639.140845309485
+step: 1198	loss (sum over all examples' seen this epoch):83977.89613127708	speed (wps):12642.147911484479
+epoch: 24	train ppl: 7.371481934925657	val ppl: 398.22876369660685	best val: 123.32886432447785	time (s) spent in epoch: 74.86320805549622
+
+EPOCH 25 ------------------
+step: 10	loss (sum over all examples' seen this epoch):775.2482342720032	speed (wps):11031.572101475265
+step: 142	loss (sum over all examples' seen this epoch):9572.075949907303	speed (wps):12525.589471901423
+step: 274	loss (sum over all examples' seen this epoch):18861.530978679657	speed (wps):12577.74747887675
+step: 406	loss (sum over all examples' seen this epoch):27615.443088412285	speed (wps):12561.141808522514
+step: 538	loss (sum over all examples' seen this epoch):36480.97853064537	speed (wps):12567.723175396168
+step: 670	loss (sum over all examples' seen this epoch):45402.83198416233	speed (wps):12551.446269752829
+step: 802	loss (sum over all examples' seen this epoch):54062.98841834068	speed (wps):12549.363851031796
+step: 934	loss (sum over all examples' seen this epoch):63025.74003338814	speed (wps):12562.436629451937
+step: 1066	loss (sum over all examples' seen this epoch):71938.84901106358	speed (wps):12576.68245884441
+step: 1198	loss (sum over all examples' seen this epoch):80341.21824920177	speed (wps):12586.615491260884
+epoch: 25	train ppl: 6.759295541558242	val ppl: 434.25037689423124	best val: 123.32886432447785	time (s) spent in epoch: 75.15094566345215
+
+EPOCH 26 ------------------
+step: 10	loss (sum over all examples' seen this epoch):755.7875543832779	speed (wps):11050.664214015696
+step: 142	loss (sum over all examples' seen this epoch):9147.436411976814	speed (wps):12526.112648777296
+step: 274	loss (sum over all examples' seen this epoch):18034.648606181145	speed (wps):12594.477197637776
+step: 406	loss (sum over all examples' seen this epoch):26382.980922460556	speed (wps):12602.525847545994
+step: 538	loss (sum over all examples' seen this epoch):34849.33306694031	speed (wps):12574.944058174047
+step: 670	loss (sum over all examples' seen this epoch):43407.89774417877	speed (wps):12554.65525852562
+step: 802	loss (sum over all examples' seen this epoch):51698.33382546902	speed (wps):12543.274204707064
+step: 934	loss (sum over all examples' seen this epoch):60259.323987960815	speed (wps):12559.578797239868
+step: 1066	loss (sum over all examples' seen this epoch):68813.65127682686	speed (wps):12571.535341207022
+step: 1198	loss (sum over all examples' seen this epoch):76868.93339037895	speed (wps):12579.986587296347
+epoch: 26	train ppl: 6.221398957602745	val ppl: 475.6364667422046	best val: 123.32886432447785	time (s) spent in epoch: 75.25477313995361
+
+EPOCH 27 ------------------
+step: 10	loss (sum over all examples' seen this epoch):719.9438560009003	speed (wps):10921.082134660523
+step: 142	loss (sum over all examples' seen this epoch):8740.09380698204	speed (wps):12389.220462025305
+step: 274	loss (sum over all examples' seen this epoch):17276.661618947983	speed (wps):12455.52107153668
+step: 406	loss (sum over all examples' seen this epoch):25272.42329478264	speed (wps):12480.28837161852
+step: 538	loss (sum over all examples' seen this epoch):33381.3253480196	speed (wps):12491.901823816157
+step: 670	loss (sum over all examples' seen this epoch):41533.45650315285	speed (wps):12461.383478539852
+step: 802	loss (sum over all examples' seen this epoch):49478.50229859352	speed (wps):12472.767829781516
+step: 934	loss (sum over all examples' seen this epoch):57703.10998737812	speed (wps):12471.858210770095
+step: 1066	loss (sum over all examples' seen this epoch):65921.92497849464	speed (wps):12478.857707460096
+step: 1198	loss (sum over all examples' seen this epoch):73645.05586504936	speed (wps):12477.059175023476
+epoch: 27	train ppl: 5.763862968885933	val ppl: 529.5634040556175	best val: 123.32886432447785	time (s) spent in epoch: 75.8588376045227
+
+EPOCH 28 ------------------
+step: 10	loss (sum over all examples' seen this epoch):692.3782134056091	speed (wps):10923.601349817878
+step: 142	loss (sum over all examples' seen this epoch):8370.92440545559	speed (wps):12385.911296778739
+step: 274	loss (sum over all examples' seen this epoch):16543.419828414917	speed (wps):12422.97978441962
+step: 406	loss (sum over all examples' seen this epoch):24211.63731276989	speed (wps):12413.02543426499
+step: 538	loss (sum over all examples' seen this epoch):31957.20710158348	speed (wps):12436.537057257712
+step: 670	loss (sum over all examples' seen this epoch):39793.5465413332	speed (wps):12438.33205364771
+step: 802	loss (sum over all examples' seen this epoch):47389.13873195648	speed (wps):12446.994780723491
+step: 934	loss (sum over all examples' seen this epoch):55225.11439919472	speed (wps):12453.908366198893
+step: 1066	loss (sum over all examples' seen this epoch):63089.66321706772	speed (wps):12458.684866874373
+step: 1198	loss (sum over all examples' seen this epoch):70464.2795932293	speed (wps):12453.582811160135
+epoch: 28	train ppl: 5.342867233777712	val ppl: 574.254180245465	best val: 123.32886432447785	time (s) spent in epoch: 75.98985600471497
+
+EPOCH 29 ------------------
+step: 10	loss (sum over all examples' seen this epoch):663.5419517755508	speed (wps):10920.6205276744
+step: 142	loss (sum over all examples' seen this epoch):8044.564036130905	speed (wps):12390.519172849508
+step: 274	loss (sum over all examples' seen this epoch):15883.135824203491	speed (wps):12452.56617058763
+step: 406	loss (sum over all examples' seen this epoch):23209.44650530815	speed (wps):12465.486547917893
+step: 538	loss (sum over all examples' seen this epoch):30649.600838422775	speed (wps):12472.43049662827
+step: 670	loss (sum over all examples' seen this epoch):38156.037692427635	speed (wps):12482.710832505014
+step: 802	loss (sum over all examples' seen this epoch):45430.77114582062	speed (wps):12479.006499243376
+step: 934	loss (sum over all examples' seen this epoch):52977.488540410995	speed (wps):12485.631816443656
+step: 1066	loss (sum over all examples' seen this epoch):60499.854338765144	speed (wps):12485.939812204824
+step: 1198	loss (sum over all examples' seen this epoch):67580.61546206474	speed (wps):12490.174382385318
+epoch: 29	train ppl: 4.989578675081238	val ppl: 633.2692063681558	best val: 123.32886432447785	time (s) spent in epoch: 75.79277777671814
+
+EPOCH 30 ------------------
+step: 10	loss (sum over all examples' seen this epoch):634.3338984251022	speed (wps):10917.574899963794
+step: 142	loss (sum over all examples' seen this epoch):7727.5049394369125	speed (wps):12347.631036107388
+step: 274	loss (sum over all examples' seen this epoch):15201.310464143753	speed (wps):12419.731948465937
+step: 406	loss (sum over all examples' seen this epoch):22240.44303536415	speed (wps):12439.202491777029
+step: 538	loss (sum over all examples' seen this epoch):29353.34145128727	speed (wps):12459.752220263344
+step: 670	loss (sum over all examples' seen this epoch):36532.774225473404	speed (wps):12473.089882513867
+step: 802	loss (sum over all examples' seen this epoch):43530.21586000919	speed (wps):12482.142317153253
+step: 934	loss (sum over all examples' seen this epoch):50782.912523150444	speed (wps):12488.60755721784
+step: 1066	loss (sum over all examples' seen this epoch):58003.16002905369	speed (wps):12476.644448555013
+step: 1198	loss (sum over all examples' seen this epoch):64798.215864896774	speed (wps):12481.939356778486
+epoch: 30	train ppl: 4.669989225835998	val ppl: 693.9185642123184	best val: 123.32886432447785	time (s) spent in epoch: 75.7476806640625
+
+EPOCH 31 ------------------
+step: 10	loss (sum over all examples' seen this epoch):609.8430091142654	speed (wps):11006.075807185953
+step: 142	loss (sum over all examples' seen this epoch):7388.188411593437	speed (wps):12512.749476116882
+step: 274	loss (sum over all examples' seen this epoch):14550.00957608223	speed (wps):12576.12357182221
+step: 406	loss (sum over all examples' seen this epoch):21271.415086388588	speed (wps):12598.760524348192
+step: 538	loss (sum over all examples' seen this epoch):28097.172572016716	speed (wps):12609.232343827885
+step: 670	loss (sum over all examples' seen this epoch):35010.25804519653	speed (wps):12616.600795333405
+step: 802	loss (sum over all examples' seen this epoch):41733.52959036827	speed (wps):12615.98777123421
+step: 934	loss (sum over all examples' seen this epoch):48687.02218413353	speed (wps):12620.295919630751
+step: 1066	loss (sum over all examples' seen this epoch):55638.44351887703	speed (wps):12622.841398675446
+step: 1198	loss (sum over all examples' seen this epoch):62163.44613194466	speed (wps):12625.271613943203
+epoch: 31	train ppl: 4.386110220179016	val ppl: 768.3149073269511	best val: 123.32886432447785	time (s) spent in epoch: 74.96453499794006
+
+EPOCH 32 ------------------
+step: 10	loss (sum over all examples' seen this epoch):579.6082091331482	speed (wps):10996.684529050719
+step: 142	loss (sum over all examples' seen this epoch):7090.5575132369995	speed (wps):12489.420515046835
+step: 274	loss (sum over all examples' seen this epoch):13994.034363627434	speed (wps):12566.528380463888
+step: 406	loss (sum over all examples' seen this epoch):20440.375638604164	speed (wps):12589.83786911039
+step: 538	loss (sum over all examples' seen this epoch):26975.884266495705	speed (wps):12604.839877899012
+step: 670	loss (sum over all examples' seen this epoch):33609.85945880413	speed (wps):12609.066457438976
+step: 802	loss (sum over all examples' seen this epoch):40035.18417716026	speed (wps):12616.803886634743
+step: 934	loss (sum over all examples' seen this epoch):46678.18200170994	speed (wps):12622.394928478496
+step: 1066	loss (sum over all examples' seen this epoch):53312.6687002182	speed (wps):12624.873299329405
+step: 1198	loss (sum over all examples' seen this epoch):59565.49154818058	speed (wps):12624.470076843068
+epoch: 32	train ppl: 4.125508987009255	val ppl: 831.6441148835677	best val: 123.32886432447785	time (s) spent in epoch: 74.95974135398865
+
+EPOCH 33 ------------------
+step: 10	loss (sum over all examples' seen this epoch):554.2892926931381	speed (wps):11003.124783871785
+step: 142	loss (sum over all examples' seen this epoch):6796.99426472187	speed (wps):12511.429118382097
+step: 274	loss (sum over all examples' seen this epoch):13407.493126988411	speed (wps):12571.722774884449
+step: 406	loss (sum over all examples' seen this epoch):19603.864178061485	speed (wps):12595.289380706232
+step: 538	loss (sum over all examples' seen this epoch):25914.761652946472	speed (wps):12603.951914227644
+step: 670	loss (sum over all examples' seen this epoch):32286.83538198471	speed (wps):12611.675615317403
+step: 802	loss (sum over all examples' seen this epoch):38460.136850476265	speed (wps):12618.105717390856
+step: 934	loss (sum over all examples' seen this epoch):44891.84226810932	speed (wps):12621.990008911487
+step: 1066	loss (sum over all examples' seen this epoch):51278.355838656425	speed (wps):12625.858785123677
+step: 1198	loss (sum over all examples' seen this epoch):57313.58634829521	speed (wps):12627.98219074941
+epoch: 33	train ppl: 3.9087011332175807	val ppl: 901.4191502866389	best val: 123.32886432447785	time (s) spent in epoch: 74.94485092163086
+
+EPOCH 34 ------------------
+step: 10	loss (sum over all examples' seen this epoch):533.4127050638199	speed (wps):11009.032166577357
+step: 142	loss (sum over all examples' seen this epoch):6559.667103886604	speed (wps):12511.199827379045
+step: 274	loss (sum over all examples' seen this epoch):12926.264581084251	speed (wps):12577.14167273635
+step: 406	loss (sum over all examples' seen this epoch):18904.086254239082	speed (wps):12601.894416240208
+step: 538	loss (sum over all examples' seen this epoch):24946.777129471302	speed (wps):12613.421972227294
+step: 670	loss (sum over all examples' seen this epoch):31050.89316934347	speed (wps):12620.583326146136
+step: 802	loss (sum over all examples' seen this epoch):36995.58076888323	speed (wps):12619.8316193714
+step: 934	loss (sum over all examples' seen this epoch):43152.936382591724	speed (wps):12623.229282825003
+step: 1066	loss (sum over all examples' seen this epoch):49306.88746243715	speed (wps):12625.913182639542
+step: 1198	loss (sum over all examples' seen this epoch):55125.31546115875	speed (wps):12627.63267158609
+epoch: 34	train ppl: 3.7118440950131903	val ppl: 969.8791802883225	best val: 123.32886432447785	time (s) spent in epoch: 74.9407148361206
+
+EPOCH 35 ------------------
+step: 10	loss (sum over all examples' seen this epoch):509.56830501556396	speed (wps):11035.258549759586
+step: 142	loss (sum over all examples' seen this epoch):6321.646928191185	speed (wps):12513.133591829912
+step: 274	loss (sum over all examples' seen this epoch):12476.022450327873	speed (wps):12577.563105435707
+step: 406	loss (sum over all examples' seen this epoch):18224.707178473473	speed (wps):12603.527814735387
+step: 538	loss (sum over all examples' seen this epoch):24026.512531638145	speed (wps):12605.865031681169
+step: 670	loss (sum over all examples' seen this epoch):29932.621953487396	speed (wps):12613.575287325424
+step: 802	loss (sum over all examples' seen this epoch):35643.276129961014	speed (wps):12613.454286876262
+step: 934	loss (sum over all examples' seen this epoch):41579.91805553436	speed (wps):12619.513757244653
+step: 1066	loss (sum over all examples' seen this epoch):47530.28448790312	speed (wps):12623.396783310674
+step: 1198	loss (sum over all examples' seen this epoch):53105.0946110487	speed (wps):12627.325295528333
+epoch: 35	train ppl: 3.5368702988597485	val ppl: 1074.5936388434009	best val: 123.32886432447785	time (s) spent in epoch: 74.95275163650513
+
+EPOCH 36 ------------------
+step: 10	loss (sum over all examples' seen this epoch):505.4377740621567	speed (wps):11018.609960785438
+step: 142	loss (sum over all examples' seen this epoch):6081.9639056921005	speed (wps):12505.410685477878
+step: 274	loss (sum over all examples' seen this epoch):11995.364081859589	speed (wps):12572.651671236652
+step: 406	loss (sum over all examples' seen this epoch):17502.140824198723	speed (wps):12597.196221228687
+step: 538	loss (sum over all examples' seen this epoch):23097.03985840082	speed (wps):12611.537717111903
+step: 670	loss (sum over all examples' seen this epoch):28782.217014431953	speed (wps):12620.003256238446
+step: 802	loss (sum over all examples' seen this epoch):34299.12663847208	speed (wps):12625.021151003695
+step: 934	loss (sum over all examples' seen this epoch):40031.438334584236	speed (wps):12627.811926573115
+step: 1066	loss (sum over all examples' seen this epoch):45756.37992501259	speed (wps):12630.515922413553
+step: 1198	loss (sum over all examples' seen this epoch):51141.9843095541	speed (wps):12632.741353827718
+epoch: 36	train ppl: 3.3760853445268704	val ppl: 1177.0452135395499	best val: 123.32886432447785	time (s) spent in epoch: 74.92126369476318
+
+EPOCH 37 ------------------
+step: 10	loss (sum over all examples' seen this epoch):478.38053345680237	speed (wps):11035.070021273237
+step: 142	loss (sum over all examples' seen this epoch):5880.4664888978	speed (wps):12515.05937389802
+step: 274	loss (sum over all examples' seen this epoch):11580.306970775127	speed (wps):12581.734676432588
+step: 406	loss (sum over all examples' seen this epoch):16924.534663558006	speed (wps):12605.662544013798
+step: 538	loss (sum over all examples' seen this epoch):22309.21394765377	speed (wps):12618.81850859893
+step: 670	loss (sum over all examples' seen this epoch):27786.353250145912	speed (wps):12625.45138466252
+step: 802	loss (sum over all examples' seen this epoch):33128.413355350494	speed (wps):12625.222216995075
+step: 934	loss (sum over all examples' seen this epoch):38653.09472352266	speed (wps):12629.52633708919
+step: 1066	loss (sum over all examples' seen this epoch):44170.60775965452	speed (wps):12632.856197403999
+step: 1198	loss (sum over all examples' seen this epoch):49324.218020141125	speed (wps):12634.429522389275
+epoch: 37	train ppl: 3.23283743114191	val ppl: 1271.1567588798941	best val: 123.32886432447785	time (s) spent in epoch: 74.90704274177551
+
+EPOCH 38 ------------------
+step: 10	loss (sum over all examples' seen this epoch):455.88537991046906	speed (wps):10713.253147933206
+step: 142	loss (sum over all examples' seen this epoch):5623.178547024727	speed (wps):12475.839262392783
+step: 274	loss (sum over all examples' seen this epoch):11148.85950833559	speed (wps):12556.75507243104
+step: 406	loss (sum over all examples' seen this epoch):16327.609886527061	speed (wps):12562.591776304436
+step: 538	loss (sum over all examples' seen this epoch):21559.602183401585	speed (wps):12568.034485083113
+step: 670	loss (sum over all examples' seen this epoch):26874.067429304123	speed (wps):12584.571384381776
+step: 802	loss (sum over all examples' seen this epoch):32010.192132294178	speed (wps):12595.961873639717
+step: 934	loss (sum over all examples' seen this epoch):37320.50588339567	speed (wps):12602.753837259123
+step: 1066	loss (sum over all examples' seen this epoch):42667.18504667282	speed (wps):12608.533877827136
+step: 1198	loss (sum over all examples' seen this epoch):47663.67550611496	speed (wps):12612.665643423545
+epoch: 38	train ppl: 3.1092927408186863	val ppl: 1370.1638055311976	best val: 123.32886432447785	time (s) spent in epoch: 75.02670288085938
+
+EPOCH 39 ------------------
+step: 10	loss (sum over all examples' seen this epoch):444.52968776226044	speed (wps):11032.98155666301
+step: 142	loss (sum over all examples' seen this epoch):5464.947063326836	speed (wps):12505.550739196447
+step: 274	loss (sum over all examples' seen this epoch):10764.466335475445	speed (wps):12575.077628649733
+step: 406	loss (sum over all examples' seen this epoch):15755.689541101456	speed (wps):12597.95840190725
+step: 538	loss (sum over all examples' seen this epoch):20780.01143693924	speed (wps):12610.609919562554
+step: 670	loss (sum over all examples' seen this epoch):25870.544083416462	speed (wps):12616.275750623623
+step: 802	loss (sum over all examples' seen this epoch):30868.898128569126	speed (wps):12616.513089530848
+step: 934	loss (sum over all examples' seen this epoch):36005.804107785225	speed (wps):12618.844917648095
+step: 1066	loss (sum over all examples' seen this epoch):41157.66918063164	speed (wps):12622.144935357173
+step: 1198	loss (sum over all examples' seen this epoch):45996.53368592262	speed (wps):12625.294208595127
+epoch: 39	train ppl: 2.986894988587214	val ppl: 1469.6900163607686	best val: 123.32886432447785	time (s) spent in epoch: 74.97965836524963
+
+DONE
+
+Saving learning curves to TRANSFORMER_ADAM_model=TRANSFORMER_optimizer=ADAM_initial_lr=0.0001_batch_size=20_seq_len=35_hidden_size=512_num_layers=6_dp_keep_prob=0.9_0/learning_curves.npy
